@@ -8,7 +8,7 @@
             "name": "(gdb) Adjuntar",
             "type": "cppdbg",
             "request": "attach",
-            "program": "/home/pablo/Documentos/LANG/vmrisc",
+            "program": "./vmrisc",
             "processId": "${command:pickProcess}",
             "MIMode": "gdb",
             "setupCommands": [
