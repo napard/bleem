@@ -1,0 +1,5 @@
+// define getChar
+  ~begin
+    ~pollStdin
+  ? breakIf: ? <> 0 .
+  ? return

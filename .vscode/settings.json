@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "psrisc.h": "c",
+        "opcodes.h": "c",
+        "typeinfo": "c"
+    }
+}

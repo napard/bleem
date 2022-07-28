@@ -1,0 +1,66 @@
+* Analize concatenative syntax from different projects (eg.: Joy).
+* Unary minus.
+* Identify compiler errors with codes (KWERR*, SYNERR*, etc.) INCOMPLETE
+
+* Exponential notation. OK, IMPLEMENTED.
+* Identify inexistent keyword selectors, eg.: `and:and:'. OK, FIXED.
+
+MODULE EXAMPLE (CONCEPT TEST)
+-----------------------------
+
+$IMPORT Io, Kernel // Imports section.
+
+$CONSTANT #MY_CONST 5
+
+$VAR A,B,C // Local to module variables (like class static).
+
+$OBJECT myField, myOtherField // Module fields.
+
+$FUNCTIONS // Function sections.
+
+$DEFINE new // n -- ) Module instance constructor.
+  ? to: myField
+  $RETURN
+
+$BEGIN // -- )  // Module initialization section.
+  0 to: A
+  MY_CONST + 7 to: B
+$ENDMOD
+
+TODO & SUBJECT TO REVISION
+--------------------------
+
+*   `~' compiles a lone token, parser doesn't expect an argument expression, eg.:
+
+        1+2 ~testFunc  ? test: 'Hola!!!'
+
+*   Blocks
+
+        [ ] Arrays
+        { } Structs, flow control (lambdas?)
+
+*   Char constants are written the same as a single char string:
+
+        'A'
+
+*   Unicode strings:
+
+        L'Hola'
+
+*   Function declaration
+
+    #myFunc function: INTEGER withArgs: [#arg1 INTEGER]  --> UNARY
+    #openFile function: INTEGER withArgs: [#withMode STRING,
+                                           #andOffset INTEGER] --> KEYWORD
+
+*   Function body
+
+    begins: {
+
+    }
+
+*   Arrays
+
+    #myArray array: 5 of: INTEGER
+
+

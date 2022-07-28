@@ -1,0 +1,8 @@
+#!/bin/bash
+
+reset
+gcc -g -O0 -Wall -o vmrisc -Irisc/ \
+    risc/main.c risc/cpu.c risc/error.c \
+    risc/memmap.c risc/memory.c risc/log.c \
+    risc/loader.c \
+    risc/devices/screen.c

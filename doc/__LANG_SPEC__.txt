@@ -1,0 +1,212 @@
+Constantes literales
+--------------------
+
+* Enteros (OK)
+  
+  125
+  _67
+  0xff
+  _0xbad
+
+* Caracteres
+
+  $A ~Caracter 'A' (OK)
+  $% ~Caracter '%'
+  $$ ~Caracter '$'
+  $~ ~Caracter '~'
+
+  %b ~Backspace
+  %e ~Escape
+  %n ~New line
+  %r ~Carriage return
+  %s ~Space
+  %t ~Horizontal tabulator.
+  
+* Cadenas
+
+ "Hola"
+ "Hola $"Juan$"" ~Cadena: Hola "Juan"
+
+* Arrays
+
+ "hola" ~Array de bytes, automático establecido por ser cadena de caracteres.
+ 
+Secciones
+---------
+
+La sección inicial por defecto es datos/constantes.
+La sección de código inicia luego de la directiva BEGIN
+
+Declaración de datos/constantes
+-------------------------------
+
+  CONSTANTES/VARIABLES
+  --------------------
+
+<val> CONST name ~Constante OK
+      VAR name ~Variable de tamaño de palabra de máquina. OK
+
+ * Ejemplo:
+   
+   12 CONST NumEl
+   VAR my_var
+   BYTE myByteVar
+
+  VECTORES/TABLAS
+  ---------------
+
+ARRAY name "hola" ~Array de bytes
+TABLE name PACKED[$h, $o, $l, $a, 0] ~Tabla empaquetada, esto es equivalente a la declaración anterior.
+                            ~  Cada elemento ocupa un byte. El compilador insertará espacio de
+                            ~  relleno (padding) hasta la próxima palabra de máquina.
+
+TABLE name [1, 2, $x, "hola"] ~Tabla, cada elemento ocupa una palabra de máquina, las
+                          ~  cadenas son almacenadas como punteros a un area donde está
+                          ~  alojado el dato.
+
+Subrutinas
+----------
+
+@STRCMP %1 a: %2 b: (a.&FETCH b.&FETCH =[] );
+
+Operadores prefijo
+------------------
+
+@             ~Address of.
+
+
+NOTAS
+-----
+
+ * Funciones de un operando.
+ 
+ "Hola!" print
+ 
+ * Funciones de 2 operandos.
+ 
+ @+ / my_table
+
+TODO
+----
+
+* Verificar `^' dentro de condicionales (`[' y `]'), no funciona bien. OK, FALTAN PRUEBAS.
+* No permitir el uso de comandos `s' o `sym' en la sección CODE.
+* Los identificadores de usuario no deben chocar con las
+  palabras reservadas si se especifica un identificador en mayúscula.
+  Son convertidos a minúscula siempre.
+
+* #1: La distinción entre 'parse_identifier_by_casing()' y 'parse_identifier()'
+  no tiene sentido, las palabras builtin siempre se toman respetando mayúsculas
+  y minúsculas, y en identificadores de usuario, no se están convirtiendo a minúscula
+  como debería ser por defecto.
+
+* Caso de un token comenzado con % OK
+* Caso de un identificador comenzado con _ OK
+* Las palabras reservadas deben ser en mayúscula. OK
+
+TESTS
+-----
+
+12 CONST PEPE
+VAR JUAN
+BEGIN 1 2 3           ~OK
+
+VAR MU
+BEGIN
+,mu(1)                ~OK, sino `mu' no es tomado como token multicaracter.
+
+ARQUITECTURA
+------------
+
+ * Registros.
+ 
+ A,B,C,D,E,F,G,H,I,J  --> Globales.
+ a,b,c,d,e,f,g,h,i,j  --> Locales a subrutina.
+ 
+   - Registros I y J son source index y destination index respectivamente.
+ 
+ * Pila.
+
+SINTAXIS
+--------
+
+Operador ':'
+
+  Aplicado a una variable:
+  
+    ,myVar:           -> myVar = valor de TOS
+    12 ,myTable:      -> myTable[12] = valor de TOS
+
+Operador '.'
+
+  Aplicado a una variable:
+  
+    ,myVar.           -> TOS = valor de myVar
+    12 ,myTable.      -> TOS = valor de myTable[12]
+
+PRIMITIVAS
+----------
+
+&2X
+&10X
+&ABS
+&AND
+&OR
+&XOR
+&BEEP
+&CLRSTK
+&CMTOIN
+&CONT
+&CUBE
+&CUBERT
+&CTOF
+&DOM
+&DOW
+&DOY
+&DROP
+&DUP
+&DTOR
+&EEX
+&FACT
+&FCLOSE
+&FEOF
+&FOPEN
+&FREWIND
+&FRAC
+&FTOC
+&HALFPI
+&HOUR
+&INT
+&INTOCM
+&KGTOLB
+&LBTOKG
+&LN
+&LOG
+&LOG2
+&LOG10
+&MIN
+&MONTH
+&NIP
+&NOT
+&OVER
+&PI
+&PICK
+&POW
+&RAND
+&ROT
+&ROUND
+&RTOD
+&SEC
+&SEED
+&SHL
+&SHR
+&SQR
+&SQRT
+&SWAP
+&TIME
+&TUCK
+&2PI
+&VER
+&YEAR
+&PRNSTK
+
