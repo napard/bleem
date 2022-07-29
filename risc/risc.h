@@ -23,11 +23,13 @@
 /* Total device name chars. */
 #define RISC_TOTAL_DEVICENAME_CHARS   16
 
+#define RISC_STACK_BASE               0xff05f
+
 #define RISC_MALLOC                   malloc
 #define RISC_FREE                     free
 #define RISC_GETCHAR                  {printf("Press a key...\n"); getchar();}
 
-enum prisc_opcode_t {
+enum risc_opcode_t {
     opc_MOV_IMM16_REG =       0x10,
     opc_MOV_REG_REG =         0x11,
     opc_MOV_REG_MEM =         0x12,
@@ -131,7 +133,7 @@ enum prisc_opcode_t {
     
 typedef uint32_t VMWORD;
 typedef int32_t  SVMWORD;
-typedef void*    prisc_opc_handler_t;
+typedef void*    risc_opc_handler_t;
 
 enum risc_retcode_t {
     retcode_OK = 0,
@@ -179,7 +181,7 @@ typedef struct _risc_memreg_t {
 typedef struct _risc_vm_t {
     uint8_t* ram;
     VMWORD* registers;
-    prisc_opc_handler_t* opctable;
+    risc_opc_handler_t* opctable;
     risc_memreg_t* memregions;
     uint32_t n_memregions;
     VMWORD stack_frame_size;
@@ -226,9 +228,6 @@ void loader_init(risc_vm_t* pCpu);
 
 /* devices/screen.c -- Screen device */
 
-#define RISC_SCREEN_DIVICE_ROWS      25
-#define RISC_SCREEN_DIVICE_COLUMNS   40
-
-extern risc_device_t device_SCREEN;
+#include "devices/screen.h"
 
 #endif /* INCLUDE_RISC_H_ */

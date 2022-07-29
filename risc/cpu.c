@@ -17,8 +17,7 @@ risc_vm_t* risc_create_cpu(uint8_t* pRam) {
     risc_vm_t* cpu = RISC_MALLOC(sizeof(risc_vm_t));
     cpu->ram = pRam;
     cpu->registers = (VMWORD*)risc_create_memory(reg_NUM_REGS * sizeof(VMWORD));
-    cpu->registers[reg_SP] = cpu->registers[reg_FP] =
-        RISC_TOTAL_MEMORY_BYTES - sizeof(VMWORD);
+    cpu->registers[reg_SP] = cpu->registers[reg_FP] = RISC_STACK_BASE;
     cpu->stack_frame_size = 0;
     cpu->n_memregions = 0;
     cpu->memregions = RISC_MALLOC(sizeof(risc_memreg_t) * RISC_TOTAL_MEMORY_REGIONS);
@@ -82,7 +81,7 @@ void writeToScreen(char pC, char pCommand, VMWORD pPos) {
 
 void risc_run(risc_vm_t* pCpu) {
 
-    static prisc_opc_handler_t g_opcs0[RISC_MAX_OPCODES];
+    static risc_opc_handler_t g_opcs0[RISC_MAX_OPCODES];
     for(uint32_t i = 0; i < RISC_MAX_OPCODES; i++)
         g_opcs0[i] = &&__INVALID_OPCODE;
 
@@ -95,7 +94,7 @@ void risc_run(risc_vm_t* pCpu) {
 
 #ifdef TEST_SCREEN_DEVICE
     writeToScreen(' ', 0xff, i);
-    for (uint32_t i = 0; i < RISC_SCREEN_DIVICE_COLUMNS * RISC_SCREEN_DIVICE_ROWS; i++) {
+    for (uint32_t i = 0; i < RISC_SCREEN_DEVICE_COLUMNS * RISC_SCREEN_DEVICE_ROWS; i++) {
         writeToScreen('X', 0, i);
     }
     CPU->ram[i++] = opc_HALT;

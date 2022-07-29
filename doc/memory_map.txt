@@ -1,0 +1,7 @@
+ms counter  0x00000000-0x00000003
+switches    0x00000004-0x00000007
+            ...
+rom         0x00001000-0x00002fff         (8KB ROM)
+            ...
+stack       0x000ef060-0x000ff05f         (64KB stack)
+console     0x000ff060-0x000fffff         (4000 bytes)

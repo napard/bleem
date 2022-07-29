@@ -29,8 +29,8 @@ int main(int argc, char** argv) {
     /* Initial memory map. */
     risc_map_memory(g_cpu, NULL, 0, RISC_TOTAL_MEMORY_BYTES - 1, 0);
     /* Map screen device. */
-    /*risc_map_memory(g_cpu, &device_SCREEN, 0x3000,
-        0x3000 + RISC_SCREEN_DIVICE_COLUMNS * RISC_SCREEN_DIVICE_ROWS - 1, 0x3000);*/
+    risc_map_memory(g_cpu, &device_SCREEN, RISC_CONSOLE_IO_BASE,
+        RISC_CONSOLE_IO_LIMIT, RISC_CONSOLE_IO_BASE);
     
     RISC_GETCHAR;
     risc_run(g_cpu);

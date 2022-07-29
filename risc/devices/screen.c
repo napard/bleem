@@ -29,7 +29,7 @@ VMWORD SCREEN_read_word(VMWORD pAddr) {
 }
 
 void SCREEN_write_word(VMWORD pData, VMWORD pAddr) {
-    /*uint8_t c = pData & 0xff;
+    uint8_t c = pData & 0xff;
     uint8_t cmd = (pData >> 8 & 0xff);
     
     switch(cmd) {
@@ -41,10 +41,10 @@ void SCREEN_write_word(VMWORD pData, VMWORD pAddr) {
         break;
     }
     
-    uint8_t x = (pAddr % RISC_SCREEN_DIVICE_COLUMNS) + 1;
-    uint8_t y = (pAddr / RISC_SCREEN_DIVICE_COLUMNS) + 1;
+    uint8_t x = (pAddr % RISC_SCREEN_DEVICE_COLUMNS) + 1;
+    uint8_t y = (pAddr / RISC_SCREEN_DEVICE_COLUMNS) + 1;
     move_cursor(x * 2, y);
-    fwrite(&c, 1, 1, stdout);*/
+    fwrite(&c, 1, 1, stdout);
 }
 
 risc_device_t device_SCREEN = {
