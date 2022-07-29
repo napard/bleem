@@ -1,5 +1,5 @@
-ms counter  0x00000000-0x00000003
-switches    0x00000004-0x00000007
+ms counter  0x00000000-0x00000003         (4 bytes)
+switches    0x00000004-0x00000007         (4 bytes)
             ...
 rom         0x00001000-0x00002fff         (8KB ROM)
             ...

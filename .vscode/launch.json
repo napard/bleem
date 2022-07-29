@@ -8,7 +8,7 @@
             "name": "(gdb) Adjuntar",
             "type": "cppdbg",
             "request": "attach",
-            "program": "./vmrisc",
+            "program": "${workspaceFolder}/vmbleem",
             "processId": "${command:pickProcess}",
             "MIMode": "gdb",
             "setupCommands": [

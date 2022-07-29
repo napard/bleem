@@ -178,7 +178,6 @@ __OPC_ADD_REG_REG:
         SETF_C;
     else
         RESETF_C;
-    //CPU->registers[r3] += (GET_FLAG(FLAG_C) != 0);
 
     if(((CPU->registers[r3] ^ CPU->registers[r2]) & (CPU->registers[r3] ^ CPU->registers[r1])) >> SIGN_BIT_SHIFT)
         SETF_V;
@@ -188,16 +187,27 @@ __OPC_ADD_REG_REG:
     NEXT_I
 }
 
-#if 0
-__OPC_ADD_LIT_REG:
+__OPC_ADDC_REG_REG:
 {
-    VMWORD val;
-    FETCH32(CPU, val);
-    uint8_t r1 = FETCH(CPU);
-    CPU->registers[reg_ACC] = CPU->registers[r1] + val;
+    uint8_t r1 = (fetch >> 8) & 0xf;
+    uint8_t r2 = (fetch >> 12) & 0xf;
+    uint8_t r3 = (fetch >> 16) & 0xf;
+    SET_REGISTER(r3, CPU->registers[r1] + CPU->registers[r2]);
+    if(CPU->registers[r3] < CPU->registers[r1])
+        SETF_C;
+    else
+        RESETF_C;
+    CPU->registers[r3] += (GET_FLAG(FLAG_C) != 0);
+
+    if(((CPU->registers[r3] ^ CPU->registers[r2]) & (CPU->registers[r3] ^ CPU->registers[r1])) >> SIGN_BIT_SHIFT)
+        SETF_V;
+    else
+        RESETF_V;
+    RISC_TRACE("addc r1, r2, r3");
     NEXT_I
 }
 
+#if 0
 __OPC_SUB_LIT_REG:
 {
     VMWORD val;
@@ -227,13 +237,32 @@ __OPC_SUB_REG_REG:
         SETF_C;
     else
         RESETF_C;
-    //CPU->registers[r3] -= (GET_FLAG(FLAG_C) != 0);
 
     if(((CPU->registers[r1] ^ CPU->registers[r2]) & (CPU->registers[r3] ^ CPU->registers[r1])) >> SIGN_BIT_SHIFT)
         SETF_V;
     else
         RESETF_V;
     RISC_TRACE("sub r2, r1, r3");
+    NEXT_I
+}
+
+__OPC_SUBC_REG_REG:
+{
+    uint8_t r1 = (fetch >> 8) & 0xf;
+    uint8_t r2 = (fetch >> 12) & 0xf;
+    uint8_t r3 = (fetch >> 16) & 0xf;
+    SET_REGISTER(r3, CPU->registers[r1] - CPU->registers[r2]);
+    if(CPU->registers[r3] > CPU->registers[r1])
+        SETF_C;
+    else
+        RESETF_C;
+    CPU->registers[r3] -= (GET_FLAG(FLAG_C) != 0);
+
+    if(((CPU->registers[r1] ^ CPU->registers[r2]) & (CPU->registers[r3] ^ CPU->registers[r1])) >> SIGN_BIT_SHIFT)
+        SETF_V;
+    else
+        RESETF_V;
+    RISC_TRACE("subc r2, r1, r3");
     NEXT_I
 }
 
@@ -535,6 +564,7 @@ __OPC_RET:
     o(MOV_LIT_OFF_REG)
 #endif
     o(ADD_REG_REG)
+    o(ADDC_REG_REG)
     o(HALT)
 #if 0
     o(PSH_LIT)
@@ -548,6 +578,7 @@ __OPC_RET:
     o(SUB_REG_LIT)
 #endif
     o(SUB_REG_REG)
+    o(SUBC_REG_REG)
     o(INC_REG)
     o(DEC_REG)
 #if 0

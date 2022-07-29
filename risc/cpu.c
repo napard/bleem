@@ -9,7 +9,8 @@
 #include "risc.h"
 
 //#define TEST_SCREEN_DEVICE
-#define INTR_TEST1
+//#define INSTR_TEST1
+#define INSTR_TEST2
 
 static const char* THIS_FILE = "cpu.h";
 
@@ -17,6 +18,7 @@ risc_vm_t* risc_create_cpu(uint8_t* pRam) {
     risc_vm_t* cpu = RISC_MALLOC(sizeof(risc_vm_t));
     cpu->ram = pRam;
     cpu->registers = (VMWORD*)risc_create_memory(reg_NUM_REGS * sizeof(VMWORD));
+    cpu->registers[reg_IP] = RISC_ROM_BASE;
     cpu->registers[reg_SP] = cpu->registers[reg_FP] = RISC_STACK_BASE;
     cpu->stack_frame_size = 0;
     cpu->n_memregions = 0;
@@ -46,8 +48,6 @@ void debug_mem(VMWORD pAddr, int32_t pCount) {
 }
 
 void debug(int32_t pAddr) {
-    /*for(uint32_t i = 0; i < 100; i++)
-        printf("\n");*/
     printf("DEBUG -----\n");
     printf("IP=%-8d  SP=%08X FP=%08X FLAGS=%s%s%s%s\n",
         CPU->registers[reg_IP], CPU->registers[reg_SP], CPU->registers[reg_FP],
@@ -58,9 +58,6 @@ void debug(int32_t pAddr) {
         CPU->registers[reg_R5], CPU->registers[reg_R6], CPU->registers[reg_R7], CPU->registers[reg_R8]);
     if(pAddr >= 0)
         debug_mem(pAddr, -1);
-    /*printf("STACK\n");
-    debug_mem(0xffffffff - 1 - 38, 40);*/
-    /*RISC_GETCHAR;*/
 }
 
 #ifdef TEST_SCREEN_DEVICE
@@ -100,14 +97,22 @@ void risc_run(risc_vm_t* pCpu) {
     CPU->ram[i++] = opc_HALT;
 #endif /* TEST_SCREEN_DEVICE */
 
-#ifdef INTR_TEST1
+#ifdef INSTR_TEST1
     uint32_t i = 0;
     ENCODE_INSTR_IMM(i, opc_MOV_IMM16_REG, reg_R2, 0, 0x666);i++;
     ENCODE_INSTR_IMM(i, opc_MOV_IMM16_REG, reg_R7, 0, 0x665);i++;
     ENCODE_INSTR_REG(i, opc_SUB_REG_REG, reg_R2, reg_R7, reg_R3);i++;
     ENCODE_INSTR_REG(i, opc_JMP_GE, 0, 0, 0);i++;
     ENCODE_INSTR_IMM(i, opc_HALT, 0, 0, 0);i++;
-#endif /* INTR_TEST1 */
+#endif /* INSTR_TEST1 */
+
+#ifdef INSTR_TEST2
+    uint32_t i = RISC_ROM_BASE / sizeof(VMWORD);
+    ENCODE_INSTR_IMM(i, opc_MOV_IMM16_REG, reg_R2, 0, -9);i++;
+    ENCODE_INSTR_IMM(i, opc_MOV_IMM16_REG, reg_R7, 0, 5);i++;
+    ENCODE_INSTR_REG(i, opc_MUL_REG_REG, reg_R2, reg_R7, reg_R3);i++;
+    ENCODE_INSTR_IMM(i, opc_HALT, 0, 0, 0);i++;
+#endif /* INSTR_TEST2 */
 
     VMWORD fetch;
     FETCH32(CPU, fetch);

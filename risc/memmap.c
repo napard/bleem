@@ -24,7 +24,7 @@ void risc_map_memory(risc_vm_t* pCpu,
     pCpu->n_memregions++;
     RISC_LOG_INFO(pCpu, "mapping mem region, dev=%s (0x%x) base=0x%x limit=0x%x remap=0x%x",
         THIS_FILE, __LINE__,
-        pDevice->name, pDevice, pBase, pLimit, pRemap);
+        pDevice->name? pDevice->name: "NULL", pDevice, pBase, pLimit, pRemap);
 }
 
 risc_memreg_t* find_region(risc_vm_t* pCpu, VMWORD pAddr) {

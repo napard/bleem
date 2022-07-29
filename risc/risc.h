@@ -23,7 +23,8 @@
 /* Total device name chars. */
 #define RISC_TOTAL_DEVICENAME_CHARS   16
 
-#define RISC_STACK_BASE               0xff05f
+#define RISC_ROM_BASE                 0x00001000
+#define RISC_STACK_BASE               0x000ff05f
 
 #define RISC_MALLOC                   malloc
 #define RISC_FREE                     free
@@ -93,6 +94,10 @@ enum risc_opcode_t {
     
     opc_RET =                 0x6c,
 #endif
+    
+    opc_ADDC_REG_REG =        0xc4,
+    opc_SUBC_REG_REG =        0xc8,
+    
     opc_HALT =                0xff,
     
     RISC_MAX_OPCODES

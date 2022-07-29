@@ -150,6 +150,14 @@ variable asmip   0 asmip !
   cr encode-imm16  $47 encode-op or.
   s" //jncyi16" type incIp ;
 
+: adcrr \ r1 r2 r3 addcr
+  cr encode-reg3 swap  encode-reg2  >r >r encode-reg1 r> r>  $c4 encode-op 3or.
+  s" //addcr" type incIp ;
+
+: sbcrr \ r1 r2 r3 sbcrr
+  cr encode-reg3 swap  encode-reg2  >r >r encode-reg1 r> r>  $c8 encode-op 3or.
+  s" //sbcrr" type incIp ;
+
 \ Test -----------------------------------------------------------------------------------------------------------------
 
 $1000 #ORG
