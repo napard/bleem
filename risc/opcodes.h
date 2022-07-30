@@ -420,9 +420,9 @@ __OPC_HALT:
 
 __OPC_JMP_NOT_EQ:
 {
-    VMWORD addr = ((fetch >> 16) & 0xffff);
+    SHWORD offs = ((fetch >> 16) & 0xffff);
     if(!GET_FLAG(FLAG_Z)) {
-        SET_REGISTER(reg_IP, addr);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
     }
     RISC_TRACE("jne");
     NEXT_I
@@ -430,9 +430,9 @@ __OPC_JMP_NOT_EQ:
 
 __OPC_JMP_EQ:
 {
-    VMWORD addr = ((fetch >> 16) & 0xffff);
+    SHWORD offs = ((fetch >> 16) & 0xffff);
     if(GET_FLAG(FLAG_Z)) {
-        SET_REGISTER(reg_IP, addr);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
     }
     RISC_TRACE("je");
     NEXT_I
@@ -440,9 +440,9 @@ __OPC_JMP_EQ:
 
 __OPC_JMP_LT:
 {
-    VMWORD addr = ((fetch >> 16) & 0xffff);
+    SHWORD offs = ((fetch >> 16) & 0xffff);
     if(GET_FLAG(FLAG_N) ^ GET_FLAG(FLAG_V)) {
-        SET_REGISTER(reg_IP, addr);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
     }
     RISC_TRACE("jlt");
     NEXT_I
@@ -450,9 +450,9 @@ __OPC_JMP_LT:
 
 __OPC_JMP_LE:
 {
-    VMWORD addr = ((fetch >> 16) & 0xffff);
+    SHWORD offs = ((fetch >> 16) & 0xffff);
     if((GET_FLAG(FLAG_N) ^ GET_FLAG(FLAG_V)) | GET_FLAG(FLAG_Z)) {
-        SET_REGISTER(reg_IP, addr);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
     }
     RISC_TRACE("jle");
     NEXT_I
@@ -460,9 +460,9 @@ __OPC_JMP_LE:
 
 __OPC_JMP_GT:
 {
-    VMWORD addr = ((fetch >> 16) & 0xffff);
+    SHWORD offs = ((fetch >> 16) & 0xffff);
     if(!((GET_FLAG(FLAG_N) ^ GET_FLAG(FLAG_V)) | GET_FLAG(FLAG_Z))) {
-        SET_REGISTER(reg_IP, addr);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
     }
     RISC_TRACE("jgt");
     NEXT_I
@@ -470,9 +470,9 @@ __OPC_JMP_GT:
 
 __OPC_JMP_GE:
 {
-    VMWORD addr = ((fetch >> 16) & 0xffff);
+    SHWORD offs = ((fetch >> 16) & 0xffff);
     if(!(GET_FLAG(FLAG_N) ^ GET_FLAG(FLAG_V))) {
-        SET_REGISTER(reg_IP, addr);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
     }
     RISC_TRACE("jge");
     NEXT_I
@@ -480,9 +480,9 @@ __OPC_JMP_GE:
 
 __OPC_JMP_CY:
 {
-    VMWORD addr = ((fetch >> 16) & 0xffff);
+    SHWORD offs = ((fetch >> 16) & 0xffff);
     if(GET_FLAG(FLAG_C)) {
-        SET_REGISTER(reg_IP, addr);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
     }
     RISC_TRACE("jc");
     NEXT_I
@@ -490,9 +490,9 @@ __OPC_JMP_CY:
 
 __OPC_JMP_NOT_CY:
 {
-    VMWORD addr = ((fetch >> 16) & 0xffff);
+    SHWORD offs = ((fetch >> 16) & 0xffff);
     if(!GET_FLAG(FLAG_C)) {
-        SET_REGISTER(reg_IP, addr);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
     }
     RISC_TRACE("jnc");
     NEXT_I

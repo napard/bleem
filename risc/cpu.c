@@ -10,7 +10,8 @@
 
 //#define TEST_SCREEN_DEVICE
 //#define INSTR_TEST1
-#define INSTR_TEST2
+//#define INSTR_TEST2
+#define INSTR_TEST3
 
 static const char* THIS_FILE = "cpu.h";
 
@@ -49,8 +50,8 @@ void debug_mem(VMWORD pAddr, int32_t pCount) {
 
 void debug(int32_t pAddr) {
     printf("DEBUG -----\n");
-    printf("IP=%-8d  SP=%08X FP=%08X FLAGS=%s%s%s%s\n",
-        CPU->registers[reg_IP], CPU->registers[reg_SP], CPU->registers[reg_FP],
+    printf("IP=%08X  %-10d  SP=%08X FP=%08X FLAGS=%s%s%s%s\n",
+        CPU->registers[reg_IP], CPU->registers[reg_IP], CPU->registers[reg_SP], CPU->registers[reg_FP],
         GET_FLAG(FLAG_Z)? "Z":"-", GET_FLAG(FLAG_V)? "V":"-", GET_FLAG(FLAG_C)? "C":"-", GET_FLAG(FLAG_N)? "N":"-");
     printf("R1=%08X  R2=%08X R3=%08X R4=%08X\n",
         CPU->registers[reg_R1], CPU->registers[reg_R2], CPU->registers[reg_R3], CPU->registers[reg_R4]);
@@ -98,11 +99,11 @@ void risc_run(risc_vm_t* pCpu) {
 #endif /* TEST_SCREEN_DEVICE */
 
 #ifdef INSTR_TEST1
-    uint32_t i = 0;
+    uint32_t i = RISC_ROM_BASE / sizeof(VMWORD);
     ENCODE_INSTR_IMM(i, opc_MOV_IMM16_REG, reg_R2, 0, 0x666);i++;
     ENCODE_INSTR_IMM(i, opc_MOV_IMM16_REG, reg_R7, 0, 0x665);i++;
     ENCODE_INSTR_REG(i, opc_SUB_REG_REG, reg_R2, reg_R7, reg_R3);i++;
-    ENCODE_INSTR_REG(i, opc_JMP_GE, 0, 0, 0);i++;
+    ENCODE_INSTR_IMM(i, opc_JMP_GE, 0, 0, -12);i++;
     ENCODE_INSTR_IMM(i, opc_HALT, 0, 0, 0);i++;
 #endif /* INSTR_TEST1 */
 
@@ -113,6 +114,39 @@ void risc_run(risc_vm_t* pCpu) {
     ENCODE_INSTR_REG(i, opc_MUL_REG_REG, reg_R2, reg_R7, reg_R3);i++;
     ENCODE_INSTR_IMM(i, opc_HALT, 0, 0, 0);i++;
 #endif /* INSTR_TEST2 */
+
+#ifdef INSTR_TEST3
+    uint32_t i = 4096 ;
+CPU->ram[i++] = 17 ;
+CPU->ram[i++] = 33 ;
+CPU->ram[i++] = 0 ;
+CPU->ram[i++] = 0 ;
+
+CPU->ram[i++] = 64 ;
+CPU->ram[i++] = 0 ;
+CPU->ram[i++] = 16 ;
+CPU->ram[i++] = 0 ;
+
+CPU->ram[i++] = 64 ;
+CPU->ram[i++] = 0 ;
+CPU->ram[i++] = 248 ;
+CPU->ram[i++] = 255 ;
+
+CPU->ram[i++] = 17 ;
+CPU->ram[i++] = 67 ;
+CPU->ram[i++] = 0 ;
+CPU->ram[i++] = 0 ;
+
+CPU->ram[i++] = 17 ;
+CPU->ram[i++] = 101 ;
+CPU->ram[i++] = 0 ;
+CPU->ram[i++] = 0 ;
+
+CPU->ram[i++] = 255 ;
+CPU->ram[i++] = 0 ;
+CPU->ram[i++] = 0 ;
+CPU->ram[i++] = 0 ;
+#endif /* INSTR_TEST3 */
 
     VMWORD fetch;
     FETCH32(CPU, fetch);

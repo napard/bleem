@@ -136,8 +136,9 @@ enum risc_opcode_t {
     #define RISC_TRACE(name)
 #endif /* RISC_INSTR_TRACING */
     
-typedef uint32_t VMWORD;
-typedef int32_t  SVMWORD;
+typedef uint32_t VMWORD;    /* VM word. */
+typedef int32_t SVMWORD;    /* Signed VM word. */
+typedef int16_t SHWORD;     /* Signed half word. */
 typedef void*    risc_opc_handler_t;
 
 enum risc_retcode_t {
@@ -225,9 +226,9 @@ void risc_log_info(risc_vm_t* pCpu, const char* pMsg, const char* pSrcFile, uint
 /* loader.c */
 
 /* Offset of amount of memory per bank, initialized by bootloader. */
-#define RISC_LOADER_TOTAL_MEM_LIMIT    0x02
+#define RISC_LOADER_TOTAL_MEM_LIMIT  0x02
 /* Offset of total memory banks installed, initialized by bootloader. */
-#define RISC_LOADER_TOTAL_MEM_BANKS    0x04
+/*#define RISC_LOADER_TOTAL_MEM_BANKS    0x04*/
 
 void loader_init(risc_vm_t* pCpu);
 
