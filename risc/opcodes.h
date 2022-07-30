@@ -101,37 +101,37 @@ __INVALID_OPCODE:
 
 __OPC_MOV_IMM16_REG: // mov imm16, reg
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
     SET_REGISTER(r1, (fetch >> 16) & 0xffff);
-    RISC_TRACE("mov imm16, reg");
+    RISC_TRACE("mov imm16, r1");
     NEXT_I
 }
 
 __OPC_MOV_REG_REG: // mov reg, reg
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
     SET_REGISTER(r2, CPU->registers[r1]);
-    RISC_TRACE("mov reg, reg");
+    RISC_TRACE("mov r1, r2");
     NEXT_I
 }
 
 __OPC_MOV_REG_MEM: // mov r2, [r1:imm16]
 {
-    uint8_t r1 = (fetch >> 8) & 0xf; // base
-    uint8_t r2 = (fetch >> 12) & 0xf; // data
-    VMWORD offset = (fetch >> 16) & 0xffff; // offset
-    risc_set_word(CPU, CPU->registers[r2], CPU->registers[r1] + offset);
+    r1 = (fetch >> 8) & 0xf; // base
+    r2 = (fetch >> 12) & 0xf; // data
+    word = (fetch >> 16) & 0xffff; // offset
+    risc_set_word(CPU, CPU->registers[r2], CPU->registers[r1] + word);
     RISC_TRACE("mov r2, [r1:imm16]");
     NEXT_I
 }
 
 __OPC_MOV_MEM_REG: // mov [r1:imm16], r2
 {
-    uint8_t r1 = (fetch >> 8) & 0xf; // base
-    uint8_t r2 = (fetch >> 12) & 0xf; // data
-    VMWORD offset = (fetch >> 16) & 0xffff; // offset
-    SET_REGISTER(r2, risc_get_word(CPU, CPU->registers[r1] + offset));
+    r1 = (fetch >> 8) & 0xf; // base
+    r2 = (fetch >> 12) & 0xf; // data
+    word = (fetch >> 16) & 0xffff; // offset
+    SET_REGISTER(r2, risc_get_word(CPU, CPU->registers[r1] + word));
     RISC_TRACE("mov [r1:imm16], r2");
     NEXT_I
 }
@@ -149,8 +149,8 @@ __OPC_MOV_LIT_MEM:
 
 __OPC_MOV_REG_PTR_REG: // mov [r1], r2
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
     SET_REGISTER(r2, risc_get_word(CPU, CPU->registers[r1]));
     RISC_TRACE("mov [r1], r2");
     NEXT_I
@@ -161,8 +161,8 @@ __OPC_MOV_LIT_OFF_REG: // mov [addr + r1], r2
 {
     VMWORD addr;
     FETCH32(CPU, addr);
-    uint8_t r1 = FETCH(CPU);
-    uint8_t r2 = FETCH(CPU);
+    r1 = FETCH(CPU);
+    r2 = FETCH(CPU);
     CPU->registers[r2] = risc_get_word(CPU, CPU->registers[r1] + addr);
     NEXT_I
 }
@@ -170,9 +170,9 @@ __OPC_MOV_LIT_OFF_REG: // mov [addr + r1], r2
 
 __OPC_ADD_REG_REG:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
-    uint8_t r3 = (fetch >> 16) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] + CPU->registers[r2]);
     if(CPU->registers[r3] < CPU->registers[r1])
         SETF_C;
@@ -189,9 +189,9 @@ __OPC_ADD_REG_REG:
 
 __OPC_ADDC_REG_REG:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
-    uint8_t r3 = (fetch >> 16) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] + CPU->registers[r2]);
     if(CPU->registers[r3] < CPU->registers[r1])
         SETF_C;
@@ -212,7 +212,7 @@ __OPC_SUB_LIT_REG:
 {
     VMWORD val;
     FETCH32(CPU, val);
-    uint8_t r1 = FETCH(CPU);
+    r1 = FETCH(CPU);
     CPU->registers[reg_ACC] = CPU->registers[r1] - val;
     NEXT_I
 }
@@ -220,7 +220,7 @@ __OPC_SUB_LIT_REG:
 __OPC_SUB_REG_LIT:
 {
     VMWORD val;
-    uint8_t r1 = FETCH(CPU);
+    r1 = FETCH(CPU);
     FETCH32(CPU, val);
     CPU->registers[reg_ACC] = val - CPU->registers[r1];
     NEXT_I
@@ -229,9 +229,9 @@ __OPC_SUB_REG_LIT:
 
 __OPC_SUB_REG_REG:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
-    uint8_t r3 = (fetch >> 16) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] - CPU->registers[r2]);
     if(CPU->registers[r3] > CPU->registers[r1])
         SETF_C;
@@ -248,9 +248,9 @@ __OPC_SUB_REG_REG:
 
 __OPC_SUBC_REG_REG:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
-    uint8_t r3 = (fetch >> 16) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] - CPU->registers[r2]);
     if(CPU->registers[r3] > CPU->registers[r1])
         SETF_C;
@@ -268,7 +268,7 @@ __OPC_SUBC_REG_REG:
 
 __OPC_INC_REG:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
     SET_REGISTER(r1, CPU->registers[r1] + 1);
     RISC_TRACE("inc r1");
     NEXT_I
@@ -276,7 +276,7 @@ __OPC_INC_REG:
 
 __OPC_DEC_REG:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
     SET_REGISTER(r1, CPU->registers[r1] - 1);
     RISC_TRACE("dec r1");
     NEXT_I
@@ -287,7 +287,7 @@ __OPC_MUL_LIT_REG:
 {
     VMWORD val;
     FETCH32(CPU, val);
-    uint8_t r1 = FETCH(CPU);
+    r1 = FETCH(CPU);
     CPU->registers[reg_ACC] = CPU->registers[r1] * val;
     NEXT_I
 }
@@ -295,9 +295,9 @@ __OPC_MUL_LIT_REG:
 
 __OPC_MUL_REG_REG:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
-    uint8_t r3 = (fetch >> 16) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] * CPU->registers[r2]);
     RISC_TRACE("mul r1, r2, r3");
     NEXT_I
@@ -305,19 +305,19 @@ __OPC_MUL_REG_REG:
 
 __OPC_LSF_REG_LIT:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
-    VMWORD shift = (fetch >> 16) & 0xffff;
-    SET_REGISTER(r2, CPU->registers[r1] << shift);
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    word = (fetch >> 16) & 0xffff;
+    SET_REGISTER(r2, CPU->registers[r1] << word);
     RISC_TRACE("lsf imm16, r1, r2");
     NEXT_I
 }
 
 __OPC_LSF_REG_REG:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
-    uint8_t r3 = (fetch >> 16) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] << CPU->registers[r2]);
     RISC_TRACE("lsf r2, r1, r3");
     NEXT_I
@@ -325,19 +325,19 @@ __OPC_LSF_REG_REG:
 
 __OPC_RSF_REG_LIT:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
-    VMWORD shift = (fetch >> 16) & 0xffff;
-    SET_REGISTER(r2, CPU->registers[r1] >> shift);
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    word = (fetch >> 16) & 0xffff;
+    SET_REGISTER(r2, CPU->registers[r1] >> word);
     RISC_TRACE("rsf imm16, r1, r2");
     NEXT_I
 }
 
 __OPC_RSF_REG_REG:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
-    uint8_t r3 = (fetch >> 16) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] >> CPU->registers[r2]);
     RISC_TRACE("rsf r2, r1, r3");
     NEXT_I
@@ -347,7 +347,7 @@ __OPC_RSF_REG_REG:
 __OPC_AND_REG_LIT:
 {
     VMWORD lit;
-    uint8_t r1 = FETCH(CPU);
+    r1 = FETCH(CPU);
     FETCH32(CPU, lit);
     CPU->registers[reg_ACC] = CPU->registers[r1] & lit;
     NEXT_I 
@@ -356,10 +356,11 @@ __OPC_AND_REG_LIT:
 
 __OPC_AND_REG_REG:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
-    uint8_t r3 = (fetch >> 16) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] & CPU->registers[r2]);
+    RISC_TRACE("and r1, r2, r3");
     NEXT_I
 }
 
@@ -367,7 +368,7 @@ __OPC_AND_REG_REG:
 __OPC_OR_REG_LIT:
 {
     VMWORD lit;
-    uint8_t r1 = FETCH(CPU);
+    r1 = FETCH(CPU);
     FETCH32(CPU, lit);
     CPU->registers[reg_ACC] = CPU->registers[r1] | lit;
     NEXT_I 
@@ -376,10 +377,11 @@ __OPC_OR_REG_LIT:
 
 __OPC_OR_REG_REG:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
-    uint8_t r3 = (fetch >> 16) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] | CPU->registers[r2]);
+    RISC_TRACE("or r1, r2, r3");
     NEXT_I
 }
 
@@ -387,7 +389,7 @@ __OPC_OR_REG_REG:
 __OPC_XOR_REG_LIT:
 {
     VMWORD lit;
-    uint8_t r1 = FETCH(CPU);
+    r1 = FETCH(CPU);
     FETCH32(CPU, lit);
     CPU->registers[reg_ACC] = CPU->registers[r1] ^ lit;
     NEXT_I 
@@ -396,17 +398,19 @@ __OPC_XOR_REG_LIT:
 
 __OPC_XOR_REG_REG:
 {
-    uint8_t r1 = (fetch >> 8) & 0xf;
-    uint8_t r2 = (fetch >> 12) & 0xf;
-    uint8_t r3 = (fetch >> 16) & 0xf;
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] ^ CPU->registers[r2]);
+    RISC_TRACE("xor r1, r2, r3");
     NEXT_I
 }
 
 __OPC_NOT:
 {
-    uint8_t r1 = (fetch >> 16) & 0xf;
+    r1 = (fetch >> 16) & 0xf;
     SET_REGISTER(r1, ~CPU->registers[r1]);
+    RISC_TRACE("not r1");
     NEXT_I
 }
 
@@ -420,9 +424,9 @@ __OPC_HALT:
 
 __OPC_JMP_NOT_EQ:
 {
-    SHWORD offs = ((fetch >> 16) & 0xffff);
+    soffs = ((fetch >> 16) & 0xffff);
     if(!GET_FLAG(FLAG_Z)) {
-        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jne");
     NEXT_I
@@ -430,9 +434,9 @@ __OPC_JMP_NOT_EQ:
 
 __OPC_JMP_EQ:
 {
-    SHWORD offs = ((fetch >> 16) & 0xffff);
+    soffs = ((fetch >> 16) & 0xffff);
     if(GET_FLAG(FLAG_Z)) {
-        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("je");
     NEXT_I
@@ -440,9 +444,9 @@ __OPC_JMP_EQ:
 
 __OPC_JMP_LT:
 {
-    SHWORD offs = ((fetch >> 16) & 0xffff);
+    soffs = ((fetch >> 16) & 0xffff);
     if(GET_FLAG(FLAG_N) ^ GET_FLAG(FLAG_V)) {
-        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jlt");
     NEXT_I
@@ -450,9 +454,9 @@ __OPC_JMP_LT:
 
 __OPC_JMP_LE:
 {
-    SHWORD offs = ((fetch >> 16) & 0xffff);
+    soffs = ((fetch >> 16) & 0xffff);
     if((GET_FLAG(FLAG_N) ^ GET_FLAG(FLAG_V)) | GET_FLAG(FLAG_Z)) {
-        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jle");
     NEXT_I
@@ -460,9 +464,9 @@ __OPC_JMP_LE:
 
 __OPC_JMP_GT:
 {
-    SHWORD offs = ((fetch >> 16) & 0xffff);
+    soffs = ((fetch >> 16) & 0xffff);
     if(!((GET_FLAG(FLAG_N) ^ GET_FLAG(FLAG_V)) | GET_FLAG(FLAG_Z))) {
-        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jgt");
     NEXT_I
@@ -470,9 +474,9 @@ __OPC_JMP_GT:
 
 __OPC_JMP_GE:
 {
-    SHWORD offs = ((fetch >> 16) & 0xffff);
+    soffs = ((fetch >> 16) & 0xffff);
     if(!(GET_FLAG(FLAG_N) ^ GET_FLAG(FLAG_V))) {
-        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jge");
     NEXT_I
@@ -480,9 +484,9 @@ __OPC_JMP_GE:
 
 __OPC_JMP_CY:
 {
-    SHWORD offs = ((fetch >> 16) & 0xffff);
+    soffs = ((fetch >> 16) & 0xffff);
     if(GET_FLAG(FLAG_C)) {
-        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jc");
     NEXT_I
@@ -490,9 +494,9 @@ __OPC_JMP_CY:
 
 __OPC_JMP_NOT_CY:
 {
-    SHWORD offs = ((fetch >> 16) & 0xffff);
+    soffs = ((fetch >> 16) & 0xffff);
     if(!GET_FLAG(FLAG_C)) {
-        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + offs);
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jnc");
     NEXT_I
@@ -509,14 +513,14 @@ __OPC_PSH_LIT:
 
 __OPC_PSH_REG:
 {
-    uint8_t r1 = FETCH(CPU);
+    r1 = FETCH(CPU);
     PUSH(CPU->registers[r1]);
     NEXT_I
 }
 
 __OPC_POP:
 {
-    uint8_t r1 = FETCH(CPU);
+    r1 = FETCH(CPU);
     POP(CPU->registers[r1]);
     NEXT_I
 }
@@ -533,7 +537,7 @@ __OPC_CAL_LIT:
 
 __OPC_CAL_REG:
 {
-    uint8_t r1 = FETCH(CPU);
+    r1 = FETCH(CPU);
     SAVE_STATE();
     /* Set dest IP. */
     CPU->registers[reg_IP] = r1;

@@ -9,6 +9,11 @@
 #ifndef INCLUDE_RISC_H_
 #define INCLUDE_RISC_H_
 
+#ifdef __linux__
+#include <signal.h>
+#include <unistd.h>
+#endif /* __linux__ */
+
 #include <math.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -171,6 +176,7 @@ enum risc_reg_t {
 
 typedef struct _risc_device_t {
     char name[RISC_TOTAL_DEVICENAME_CHARS];
+    uint8_t(*initialize)();
     uint8_t(*read_byte)(VMWORD pAddr);
     void(*write_byte)(uint8_t pData, VMWORD pAddr);
     VMWORD(*read_word)(VMWORD pAddr);
@@ -218,6 +224,7 @@ void risc_destroy_memory(uint8_t* pMem);
 risc_vm_t* risc_create_cpu(uint8_t* pRam);
 void risc_destroy_cpu(risc_vm_t* pCpu);
 void risc_run();
+void debug_mem(VMWORD pAddr, int32_t pCount);
 
 /* log.c */
 
@@ -230,7 +237,14 @@ void risc_log_info(risc_vm_t* pCpu, const char* pMsg, const char* pSrcFile, uint
 /* Offset of total memory banks installed, initialized by bootloader. */
 /*#define RISC_LOADER_TOTAL_MEM_BANKS    0x04*/
 
-void loader_init(risc_vm_t* pCpu);
+void loader_init(risc_vm_t* pCpu, const char* pRomFile);
+
+/* exception.c */
+
+void risc_segfault_sigaction(int32_t pSignal, siginfo_t* pSiginfo,
+    void** p_arg);
+void risc_fp_exception_sigaction(int32_t pSignal, siginfo_t* pSiginfo,
+    void** p_arg);
 
 /* devices/screen.c -- Screen device */
 

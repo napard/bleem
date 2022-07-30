@@ -16,6 +16,10 @@ static void clear_screen() {
     printf("\x1b[2J");
 }
 
+static uint8_t SCREEN_initialize() {
+    return 0;
+}
+
 uint8_t SCREEN_read_byte(VMWORD pAddr) {
     return 0;
 }
@@ -49,6 +53,7 @@ void SCREEN_write_word(VMWORD pData, VMWORD pAddr) {
 
 risc_device_t device_SCREEN = {
     "SCREEN",
+    SCREEN_initialize,
     SCREEN_read_byte,
     SCREEN_write_byte,
     SCREEN_read_word,

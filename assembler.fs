@@ -58,6 +58,10 @@ variable fwdjmp  0 fwdjmp !
 : #ORG  origin ! ;
 : #LABEL  create  asmip @  origin @ + , does> @ ; 
 : #FWD  fwdjmp on ;
+: #<PATCH  dup dup  asmip @  origin @ +
+  swap -  16 lshift
+  swap    origin @ -  codebuff + @  $ffffffff and  or
+  swap    origin @ -  codebuff +  vmword! ;
 
 \ Instruction encoding. -----
 
@@ -134,7 +138,7 @@ variable fwdjmp  0 fwdjmp !
     fwdjmp off
     fwd-label
     0 encode-imm16 encode-op  or vmword,
-    r> drop
+    r> drop \ Early return from caller.
   else
     drop
   then ;
@@ -144,39 +148,37 @@ variable fwdjmp  0 fwdjmp !
   origin @ -  asmip @  -  encode-imm16  $40 encode-op  or vmword, ;
 
 : jei16
-  emit-fwd-jmp
-  encode-imm16  $41 encode-op  or vmword, ;
+  $41 emit-fwd-jmp
+  origin @ -  asmip @  -  encode-imm16  $40 encode-op  or vmword, ;
 
 : jlti16
-  emit-fwd-jmp
-  encode-imm16  $42 encode-op  or vmword, ;
+  $42 emit-fwd-jmp
+  origin @ -  asmip @  -  encode-imm16  $42 encode-op  or vmword, ;
 
 : jlei16
-  emit-fwd-jmp
-  encode-imm16  $43 encode-op  or vmword, ;
+  $43 emit-fwd-jmp
+  origin @ -  asmip @  -  encode-imm16  $43 encode-op  or vmword, ;
 
 : jgti16
-  emit-fwd-jmp
-  encode-imm16  $44 encode-op  or vmword, ;
+  $44 emit-fwd-jmp
+  origin @ -  asmip @  -  encode-imm16  $44 encode-op  or vmword, ;
 
 : jgei16
-  emit-fwd-jmp
-  encode-imm16  $45 encode-op  or vmword, ;
+  $45 emit-fwd-jmp
+  origin @ -  asmip @  -  encode-imm16  $45 encode-op  or vmword, ;
 
 : jcyi16
-  emit-fwd-jmp
-  encode-imm16  $46 encode-op  or vmword, ;
+  $46 emit-fwd-jmp
+  origin @ -  asmip @  -  encode-imm16  $46 encode-op  or vmword, ;
 
 : jncyi16
-  emit-fwd-jmp
-  encode-imm16  $47 encode-op  or vmword, ;
+  $47 emit-fwd-jmp
+  origin @ -  asmip @  -  encode-imm16  $47 encode-op  or vmword, ;
 
 : adcrr \ r1 r2 r3 addcr
-  emit-fwd-jmp
   encode-reg3 swap  encode-reg2  >r >r encode-reg1 r> r>  $c4 encode-op  3or vmword, ;
 
 : sbcrr \ r1 r2 r3 sbcrr
-  emit-fwd-jmp
   encode-reg3 swap  encode-reg2  >r >r encode-reg1 r> r>  $c8 encode-op  3or vmword, ;
 
 \ Test -----------------------------------------------------------------------------------------------------------------
@@ -204,11 +206,6 @@ $1000 #ORG
     $1237           jnei16
     %r4 %r5 %r6     sbcrr
 )
-
-: #<PATCH  dup dup  asmip @  origin @ +
-  swap -  16 lshift
-  swap    origin @ -  codebuff + @  $ffffffff and  or
-  swap    origin @ -  codebuff +  vmword! ;
 
 $1000 #ORG
 

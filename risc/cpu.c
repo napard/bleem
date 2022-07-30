@@ -11,7 +11,7 @@
 //#define TEST_SCREEN_DEVICE
 //#define INSTR_TEST1
 //#define INSTR_TEST2
-#define INSTR_TEST3
+//#define INSTR_TEST3
 
 static const char* THIS_FILE = "cpu.h";
 
@@ -79,6 +79,9 @@ void writeToScreen(char pC, char pCommand, VMWORD pPos) {
 
 void risc_run(risc_vm_t* pCpu) {
 
+    static uint8_t r1, r2, r3;
+    static SHWORD soffs;
+    static VMWORD word;
     static risc_opc_handler_t g_opcs0[RISC_MAX_OPCODES];
     for(uint32_t i = 0; i < RISC_MAX_OPCODES; i++)
         g_opcs0[i] = &&__INVALID_OPCODE;
@@ -117,35 +120,35 @@ void risc_run(risc_vm_t* pCpu) {
 
 #ifdef INSTR_TEST3
     uint32_t i = 4096 ;
-CPU->ram[i++] = 17 ;
-CPU->ram[i++] = 33 ;
-CPU->ram[i++] = 0 ;
-CPU->ram[i++] = 0 ;
+    CPU->ram[i++] = 17 ;
+    CPU->ram[i++] = 33 ;
+    CPU->ram[i++] = 0 ;
+    CPU->ram[i++] = 0 ;
 
-CPU->ram[i++] = 64 ;
-CPU->ram[i++] = 0 ;
-CPU->ram[i++] = 16 ;
-CPU->ram[i++] = 0 ;
+    CPU->ram[i++] = 64 ;
+    CPU->ram[i++] = 0 ;
+    CPU->ram[i++] = 16 ;
+    CPU->ram[i++] = 0 ;
 
-CPU->ram[i++] = 64 ;
-CPU->ram[i++] = 0 ;
-CPU->ram[i++] = 248 ;
-CPU->ram[i++] = 255 ;
+    CPU->ram[i++] = 64 ;
+    CPU->ram[i++] = 0 ;
+    CPU->ram[i++] = 248 ;
+    CPU->ram[i++] = 255 ;
 
-CPU->ram[i++] = 17 ;
-CPU->ram[i++] = 67 ;
-CPU->ram[i++] = 0 ;
-CPU->ram[i++] = 0 ;
+    CPU->ram[i++] = 17 ;
+    CPU->ram[i++] = 67 ;
+    CPU->ram[i++] = 0 ;
+    CPU->ram[i++] = 0 ;
 
-CPU->ram[i++] = 17 ;
-CPU->ram[i++] = 101 ;
-CPU->ram[i++] = 0 ;
-CPU->ram[i++] = 0 ;
+    CPU->ram[i++] = 17 ;
+    CPU->ram[i++] = 101 ;
+    CPU->ram[i++] = 0 ;
+    CPU->ram[i++] = 0 ;
 
-CPU->ram[i++] = 255 ;
-CPU->ram[i++] = 0 ;
-CPU->ram[i++] = 0 ;
-CPU->ram[i++] = 0 ;
+    CPU->ram[i++] = 255 ;
+    CPU->ram[i++] = 0 ;
+    CPU->ram[i++] = 0 ;
+    CPU->ram[i++] = 0 ;
 #endif /* INSTR_TEST3 */
 
     VMWORD fetch;
