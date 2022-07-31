@@ -11,7 +11,7 @@
 //#define TEST_SCREEN_DEVICE
 //#define INSTR_TEST1
 //#define INSTR_TEST2
-//#define INSTR_TEST3
+#define INSTR_TEST3
 
 static const char* THIS_FILE = "cpu.h";
 
@@ -19,12 +19,15 @@ risc_vm_t* risc_create_cpu(uint8_t* pRam) {
     risc_vm_t* cpu = RISC_MALLOC(sizeof(risc_vm_t));
     cpu->ram = pRam;
     cpu->registers = (VMWORD*)risc_create_memory(reg_NUM_REGS * sizeof(VMWORD));
-    cpu->registers[reg_IP] = RISC_ROM_BASE;
+    cpu->registers[reg_IP] = RISC_ROM_CODE_BASE;
     cpu->registers[reg_SP] = cpu->registers[reg_FP] = RISC_STACK_BASE;
     cpu->stack_frame_size = 0;
     cpu->n_memregions = 0;
     cpu->memregions = RISC_MALLOC(sizeof(risc_memreg_t) * RISC_TOTAL_MEMORY_REGIONS);
     cpu->flags = 0;
+#ifdef RISC_EMULATED_CLOCK
+    cpu->cycles = 0;
+#endif /* RISC_EMULATED_CLOCK */
 
     return cpu;
 }
@@ -36,29 +39,27 @@ void risc_destroy_cpu(risc_vm_t* pCpu) {
     RISC_FREE(pCpu);
 }
 
-static risc_vm_t* CPU = NULL;
-
-void debug_mem(VMWORD pAddr, int32_t pCount) {
+void debug_mem(risc_vm_t* pCpu, VMWORD pAddr, int32_t pCount) {
     int32_t count;
     if(pCount < 0) count = 8; else count = pCount;
     printf("%04X: ", pAddr);
     for(uint32_t i = 0; i < count; i++) {
-        printf("%02X ", CPU->ram[i + pAddr]);
+        printf("%02X ", pCpu->ram[i + pAddr]);
     }
     printf("\n\n");
 }
 
-void debug(int32_t pAddr) {
+void debug(risc_vm_t* pCpu, int32_t pAddr) {
     printf("DEBUG -----\n");
     printf("IP=%08X  %-10d  SP=%08X FP=%08X FLAGS=%s%s%s%s\n",
-        CPU->registers[reg_IP], CPU->registers[reg_IP], CPU->registers[reg_SP], CPU->registers[reg_FP],
-        GET_FLAG(FLAG_Z)? "Z":"-", GET_FLAG(FLAG_V)? "V":"-", GET_FLAG(FLAG_C)? "C":"-", GET_FLAG(FLAG_N)? "N":"-");
+        pCpu->registers[reg_IP], pCpu->registers[reg_IP], pCpu->registers[reg_SP], pCpu->registers[reg_FP],
+        GET_FLAG(pCpu, FLAG_Z)? "Z":"-", GET_FLAG(pCpu, FLAG_V)? "V":"-", GET_FLAG(pCpu, FLAG_C)? "C":"-", GET_FLAG(pCpu, FLAG_N)? "N":"-");
     printf("R1=%08X  R2=%08X R3=%08X R4=%08X\n",
-        CPU->registers[reg_R1], CPU->registers[reg_R2], CPU->registers[reg_R3], CPU->registers[reg_R4]);
+        pCpu->registers[reg_R1], pCpu->registers[reg_R2], pCpu->registers[reg_R3], pCpu->registers[reg_R4]);
     printf("R5=%08X  R6=%08X R7=%08X R8=%08X\n",
-        CPU->registers[reg_R5], CPU->registers[reg_R6], CPU->registers[reg_R7], CPU->registers[reg_R8]);
+        pCpu->registers[reg_R5], pCpu->registers[reg_R6], pCpu->registers[reg_R7], pCpu->registers[reg_R8]);
     if(pAddr >= 0)
-        debug_mem(pAddr, -1);
+        debug_mem(pCpu, pAddr, -1);
 }
 
 #ifdef TEST_SCREEN_DEVICE
@@ -77,11 +78,12 @@ void writeToScreen(char pC, char pCommand, VMWORD pPos) {
 } 
 #endif /* TEST_SCREEN_DEVICE */
 
+static risc_vm_t* CPU = NULL;
 void risc_run(risc_vm_t* pCpu) {
 
     static uint8_t r1, r2, r3;
     static SHWORD soffs;
-    static VMWORD word;
+    static VMWORD word, fetch;
     static risc_opc_handler_t g_opcs0[RISC_MAX_OPCODES];
     for(uint32_t i = 0; i < RISC_MAX_OPCODES; i++)
         g_opcs0[i] = &&__INVALID_OPCODE;
@@ -151,9 +153,20 @@ void risc_run(risc_vm_t* pCpu) {
     CPU->ram[i++] = 0 ;
 #endif /* INSTR_TEST3 */
 
-    VMWORD fetch;
+#ifndef RISC_EMULATED_CLOCK
     FETCH32(CPU, fetch);
     goto *CPU->opctable[fetch & 0xff];
+#else
+clock:
+    if(CPU->cycles == 0) {
+        FETCH32(CPU, fetch);
+        CPU->cycles = INSTR_CYCLES(fetch & 0xff);
+        goto *CPU->opctable[fetch & 0xff];
+    }
+c_elapsed:
+    CPU->cycles--;
+    goto clock;    
+#endif /* !RISC_EMULATED_CLOCK */
 
 #define OPCODE_IMPL
 #include "opcodes.h"

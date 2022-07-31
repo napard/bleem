@@ -10,6 +10,14 @@
 
 risc_vm_t* g_cpu = NULL;
 
+void initialize_devices() {
+    device_SCREEN.initialize();
+}
+
+/*void finalize_devices() {
+    device_SCREEN.finalize();
+}*/
+
 void do_exit() {
     risc_destroy_cpu(g_cpu);
 }
@@ -48,8 +56,10 @@ int main(int argc, char** argv) {
     /* Map and initialize screen device. */
     risc_map_memory(g_cpu, &device_SCREEN, RISC_CONSOLE_IO_BASE,
         RISC_CONSOLE_IO_LIMIT, RISC_CONSOLE_IO_BASE);
-    device_SCREEN.initialize();
+    
+    initialize_devices();
     
     RISC_GETCHAR;
+    debug(g_cpu, g_cpu->registers[reg_IP]);
     risc_run(g_cpu);
 }

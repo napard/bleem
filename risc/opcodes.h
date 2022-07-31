@@ -99,6 +99,9 @@ __INVALID_OPCODE:
     risc_cpu_exception(CPU, "INVALID OPCODE", THIS_FILE, __LINE__);
 }
 
+__OPC_NOP:
+    NEXT_I
+
 __OPC_MOV_IMM16_REG: // mov imm16, reg
 {
     r1 = (fetch >> 8) & 0xf;
@@ -197,7 +200,7 @@ __OPC_ADDC_REG_REG:
         SETF_C;
     else
         RESETF_C;
-    CPU->registers[r3] += (GET_FLAG(FLAG_C) != 0);
+    CPU->registers[r3] += (GET_FLAG(CPU, FLAG_C) != 0);
 
     if(((CPU->registers[r3] ^ CPU->registers[r2]) & (CPU->registers[r3] ^ CPU->registers[r1])) >> SIGN_BIT_SHIFT)
         SETF_V;
@@ -256,7 +259,7 @@ __OPC_SUBC_REG_REG:
         SETF_C;
     else
         RESETF_C;
-    CPU->registers[r3] -= (GET_FLAG(FLAG_C) != 0);
+    CPU->registers[r3] -= (GET_FLAG(CPU, FLAG_C) != 0);
 
     if(((CPU->registers[r1] ^ CPU->registers[r2]) & (CPU->registers[r3] ^ CPU->registers[r1])) >> SIGN_BIT_SHIFT)
         SETF_V;
@@ -416,16 +419,16 @@ __OPC_NOT:
 
 __OPC_HALT:
 {
-#ifdef RISC_INSTR_TRACING
     printf("SYSTEM HALTED\n");
-#endif /* RISC_INSTR_TRACING */
-    exit(retcode_OK);
+    CPU->registers[reg_IP] -= sizeof(VMWORD);
+    sleep(5);
+    NEXT_I
 }
 
 __OPC_JMP_NOT_EQ:
 {
     soffs = ((fetch >> 16) & 0xffff);
-    if(!GET_FLAG(FLAG_Z)) {
+    if(!GET_FLAG(CPU, FLAG_Z)) {
         SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jne");
@@ -435,7 +438,7 @@ __OPC_JMP_NOT_EQ:
 __OPC_JMP_EQ:
 {
     soffs = ((fetch >> 16) & 0xffff);
-    if(GET_FLAG(FLAG_Z)) {
+    if(GET_FLAG(CPU, FLAG_Z)) {
         SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("je");
@@ -445,7 +448,7 @@ __OPC_JMP_EQ:
 __OPC_JMP_LT:
 {
     soffs = ((fetch >> 16) & 0xffff);
-    if(GET_FLAG(FLAG_N) ^ GET_FLAG(FLAG_V)) {
+    if(GET_FLAG(CPU, FLAG_N) ^ GET_FLAG(CPU, FLAG_V)) {
         SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jlt");
@@ -455,7 +458,7 @@ __OPC_JMP_LT:
 __OPC_JMP_LE:
 {
     soffs = ((fetch >> 16) & 0xffff);
-    if((GET_FLAG(FLAG_N) ^ GET_FLAG(FLAG_V)) | GET_FLAG(FLAG_Z)) {
+    if((GET_FLAG(CPU, FLAG_N) ^ GET_FLAG(CPU, FLAG_V)) | GET_FLAG(CPU, FLAG_Z)) {
         SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jle");
@@ -465,7 +468,7 @@ __OPC_JMP_LE:
 __OPC_JMP_GT:
 {
     soffs = ((fetch >> 16) & 0xffff);
-    if(!((GET_FLAG(FLAG_N) ^ GET_FLAG(FLAG_V)) | GET_FLAG(FLAG_Z))) {
+    if(!((GET_FLAG(CPU, FLAG_N) ^ GET_FLAG(CPU, FLAG_V)) | GET_FLAG(CPU, FLAG_Z))) {
         SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jgt");
@@ -475,7 +478,7 @@ __OPC_JMP_GT:
 __OPC_JMP_GE:
 {
     soffs = ((fetch >> 16) & 0xffff);
-    if(!(GET_FLAG(FLAG_N) ^ GET_FLAG(FLAG_V))) {
+    if(!(GET_FLAG(CPU, FLAG_N) ^ GET_FLAG(CPU, FLAG_V))) {
         SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jge");
@@ -485,7 +488,7 @@ __OPC_JMP_GE:
 __OPC_JMP_CY:
 {
     soffs = ((fetch >> 16) & 0xffff);
-    if(GET_FLAG(FLAG_C)) {
+    if(GET_FLAG(CPU, FLAG_C)) {
         SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jc");
@@ -495,7 +498,7 @@ __OPC_JMP_CY:
 __OPC_JMP_NOT_CY:
 {
     soffs = ((fetch >> 16) & 0xffff);
-    if(!GET_FLAG(FLAG_C)) {
+    if(!GET_FLAG(CPU, FLAG_C)) {
         SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
     }
     RISC_TRACE("jnc");
@@ -556,6 +559,7 @@ __OPC_RET:
 #define o(opc) \
     g_opcs0[opc_##opc] = &&__OPC_##opc;
 {
+    o(NOP)
     o(MOV_IMM16_REG)
     o(MOV_REG_REG)
     o(MOV_REG_MEM)

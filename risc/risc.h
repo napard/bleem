@@ -1,6 +1,6 @@
 /*
  * risc.h
- * Main header of virtual machine.
+ * Main header.
  *
  * 22 jul 2022 -- 10:24 -03
  * Notes:
@@ -21,6 +21,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Compile time flags. -------------------------------------------------------*/
+
+#define RISC_EMULATED_CLOCK
+#define RISC_SCREEN_DEVICE_SDL2
+#define RISC_SDL2_RENDERER_FLAGS SDL_RENDERER_ACCELERATED
+
+/* Compilation flags dependant includes -------------------------------------*/
+
+#ifdef RISC_SCREEN_DEVICE_SDL2
+#include <SDL.h>
+#endif /* RISC_SCREEN_DEVICE_SDL2 */
+
+/* ---------------------------------------------------------------------------*/
+
 /* Total RAM bytes. */
 #define RISC_TOTAL_MEMORY_BYTES       (1024*1024)
 /* Total memory mapped regions. */
@@ -28,14 +42,15 @@
 /* Total device name chars. */
 #define RISC_TOTAL_DEVICENAME_CHARS   16
 
-#define RISC_ROM_BASE                 0x00001000
-#define RISC_STACK_BASE               0x000ff05f
+#define RISC_ROM_CODE_BASE            0x00001000
+#define RISC_STACK_BASE               0x000ef830
 
 #define RISC_MALLOC                   malloc
 #define RISC_FREE                     free
 #define RISC_GETCHAR                  {printf("Press a key...\n"); getchar();}
 
 enum risc_opcode_t {
+    opc_NOP =                 0x00,
     opc_MOV_IMM16_REG =       0x10,
     opc_MOV_REG_REG =         0x11,
     opc_MOV_REG_MEM =         0x12,
@@ -108,11 +123,6 @@ enum risc_opcode_t {
     RISC_MAX_OPCODES
 };
 
-#define FETCH32(cpu, v) \
-    { \
-        v = *((VMWORD*)(cpu->ram + cpu->registers[reg_IP])); \
-    }
-
 #define ENCODE_INSTR_IMM(i, opc, r1, r2, rest) \
     ((VMWORD *)CPU->ram)[i] = ((opc & 0xff) | ((r1 & 0xf) << 8) | ((r2 & 0xf) << 12) | ((rest & 0xffff) << 16)); \
     printf("INSTR: $%08X\n", ((VMWORD *)CPU->ram)[i]);
@@ -122,21 +132,33 @@ enum risc_opcode_t {
     printf("INSTR: $%08X\n", ((VMWORD *)CPU->ram)[i]);
 
 #define STEP_DEBUG debug(CPU->registers[reg_IP]);
+#define FETCH32(cpu, v) \
+    { \
+        v = *((VMWORD*)(cpu->ram + cpu->registers[reg_IP])); \
+        CPU->registers[reg_IP] += sizeof(VMWORD); \
+    }
+
+#ifndef RISC_EMULATED_CLOCK
 #define NEXT_I \
-    CPU->registers[reg_IP] += sizeof(VMWORD); \
     FETCH32(CPU, fetch); \
     goto *CPU->opctable[fetch & 0xff];
+#else
+#define NEXT_I \
+    goto c_elapsed;
+/* TODO: implement instruction cycles and fixed clock rate. */
+#define INSTR_CYCLES(opc) 1
+#endif /* RISC_EMULATED_CLOCK */
 
 #define RISC_LOG_INFO(cpu, msg, src_file, src_line, ...) risc_log_info(cpu, msg, src_file, src_line, __VA_ARGS__)
 //#define RISC_LOG_INFO(cpu, msg, src_file, src_line, ...)
 
-#define RISC_INSTR_TRACING
+//#define RISC_INSTR_TRACING
 #ifdef RISC_INSTR_TRACING
     void debug(int32_t pAddr);
     #define RISC_TRACE(name) \
         printf("   %s    \n", name); \
-        debug(CPU->registers[reg_IP]); \
-        RISC_GETCHAR;
+        debug(CPU->registers[reg_IP]); /*\
+        RISC_GETCHAR;*/
 #else
     #define RISC_TRACE(name)
 #endif /* RISC_INSTR_TRACING */
@@ -172,11 +194,12 @@ enum risc_reg_t {
 #define FLAG_V 4
 #define FLAG_Z 8
 
-#define GET_FLAG(f) (CPU->flags & f)
+#define GET_FLAG(cpu, f) (cpu ->flags & f)
 
 typedef struct _risc_device_t {
     char name[RISC_TOTAL_DEVICENAME_CHARS];
     uint8_t(*initialize)();
+    uint8_t(*finalize)();
     uint8_t(*read_byte)(VMWORD pAddr);
     void(*write_byte)(uint8_t pData, VMWORD pAddr);
     VMWORD(*read_word)(VMWORD pAddr);
@@ -190,14 +213,30 @@ typedef struct _risc_memreg_t {
     VMWORD remap;
 } risc_memreg_t;
 
+typedef struct _risc_display_t {
+#ifdef RISC_SCREEN_DEVICE_SDL2
+    SDL_Window* sdl2_window;
+    SDL_Renderer* sdl2_renderer;
+    SDL_Surface* sdl2_window_surface;
+#else
+#error SDL2 display is not enabled.
+#endif /* RISC_SCREEN_DEVICE_SDL2 */
+} risc_display_t;
+
 typedef struct _risc_vm_t {
-    uint8_t* ram;
     VMWORD* registers;
     risc_opc_handler_t* opctable;
-    risc_memreg_t* memregions;
-    uint32_t n_memregions;
     VMWORD stack_frame_size;
     VMWORD flags;
+#ifdef RISC_EMULATED_CLOCK
+    uint32_t cycles;
+#endif /* RISC_EMULATED_CLOCK */
+
+    uint8_t* ram;
+    risc_memreg_t* memregions;
+    uint32_t n_memregions;
+
+    risc_display_t display;
 } risc_vm_t;
 
 /* error.c */
@@ -224,7 +263,8 @@ void risc_destroy_memory(uint8_t* pMem);
 risc_vm_t* risc_create_cpu(uint8_t* pRam);
 void risc_destroy_cpu(risc_vm_t* pCpu);
 void risc_run();
-void debug_mem(VMWORD pAddr, int32_t pCount);
+void debug_mem(risc_vm_t* pCpu, VMWORD pAddr, int32_t pCount);
+void debug(risc_vm_t* pCpu, int32_t pAddr);
 
 /* log.c */
 

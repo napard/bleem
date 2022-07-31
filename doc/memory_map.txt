@@ -1,7 +1,7 @@
 ms counter  0x00000000-0x00000003         (4 bytes)
 switches    0x00000004-0x00000007         (4 bytes)
             ...
-rom         0x00001000-0x00002fff         (8KB ROM)
+rom code    0x00001000-0x00002fff         (8KB ROM code (bootstrap))
             ...
-stack       0x000ef060-0x000ff05f         (64KB stack)
-console     0x000ff060-0x000fffff         (4000 bytes)
+stack       0x000ef830-0x000ff82f         (64KB stack)
+console     0x000ff830-0x000fffff         (2000 bytes)

@@ -23,7 +23,7 @@ void loader_init(risc_vm_t* pCpu, const char* pRomFile) {
             risc_panic(pCpu, "unable to open ROM file: %s",
                 THIS_FILE, __LINE__, pRomFile);
         }
-        fread(&pCpu->ram[RISC_ROM_BASE], 8*1024, 1, rom);
+        fread(&pCpu->ram[RISC_ROM_CODE_BASE], 8*1024, 1, rom);
         fclose(rom);
     }
 }
