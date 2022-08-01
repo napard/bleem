@@ -3,13 +3,13 @@
 vocabulary assembler
 also assembler  definitions
 
-4 constant VMWORD-BYTES
-8192 constant CODE-BYTES
+4 constant VMWORD-BYTES  \ Bytes per word.
+8192 constant CODE-BYTES \ Size of assembly buffer.
 
-variable codebuff  CODE-BYTES allot
-variable origin  0 origin !
-variable asmip   0 asmip !
-variable fwdjmp  0 fwdjmp !
+variable codebuff  CODE-BYTES allot \ Assembly buffer.
+variable origin  0 origin !         \ Origin address.
+variable asmip   0 asmip !          \ Assemble address.
+variable fwdjmp  0 fwdjmp !         \ Forward jump flag.
 : incIp  VMWORD-BYTES asmip +! ;
 
 : vmword,  ( u -- )

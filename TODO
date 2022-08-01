@@ -1,1 +1,3 @@
+* Map ROM memory region as read only.
+* Continue with charsets and screen.
 * Interrupts, interrupt mask, interrupt vector table.
