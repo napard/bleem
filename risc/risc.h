@@ -24,14 +24,14 @@
 /* Compile time flags. -------------------------------------------------------*/
 
 #define RISC_EMULATED_CLOCK
-#define RISC_SCREEN_DEVICE_SDL2
+#define RISC_VIDEO_DEVICE_SDL2
 #define RISC_SDL2_RENDERER_FLAGS SDL_RENDERER_ACCELERATED
 
 /* Compilation flags dependant includes -------------------------------------*/
 
-#ifdef RISC_SCREEN_DEVICE_SDL2
+#ifdef RISC_VIDEO_DEVICE_SDL2
 #include <SDL.h>
-#endif /* RISC_SCREEN_DEVICE_SDL2 */
+#endif /* RISC_VIDEO_DEVICE_SDL2 */
 
 /* ---------------------------------------------------------------------------*/
 
@@ -44,6 +44,7 @@
 
 #define RISC_ROM_CODE_BASE            0x00001000
 #define RISC_STACK_BASE               0x000ef830
+#define RISC_CHARSET0_BASE            0x00000800
 
 #define RISC_MALLOC                   malloc
 #define RISC_FREE                     free
@@ -214,13 +215,13 @@ typedef struct _risc_memreg_t {
 } risc_memreg_t;
 
 typedef struct _risc_display_t {
-#ifdef RISC_SCREEN_DEVICE_SDL2
+#ifdef RISC_VIDEO_DEVICE_SDL2
     SDL_Window* sdl2_window;
     SDL_Renderer* sdl2_renderer;
     SDL_Surface* sdl2_window_surface;
 #else
 #error SDL2 display is not enabled.
-#endif /* RISC_SCREEN_DEVICE_SDL2 */
+#endif /* RISC_VIDEO_DEVICE_SDL2 */
 } risc_display_t;
 
 typedef struct _risc_vm_t {
@@ -286,8 +287,8 @@ void risc_segfault_sigaction(int32_t pSignal, siginfo_t* pSiginfo,
 void risc_fp_exception_sigaction(int32_t pSignal, siginfo_t* pSiginfo,
     void** p_arg);
 
-/* devices/screen.c -- Screen device */
+/* devices/video.c -- Video device */
 
-#include "devices/screen.h"
+#include "devices/video.h"
 
 #endif /* INCLUDE_RISC_H_ */

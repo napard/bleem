@@ -8,7 +8,6 @@
 
 #include "risc.h"
 
-//#define TEST_SCREEN_DEVICE
 //#define INSTR_TEST1
 //#define INSTR_TEST2
 #define INSTR_TEST3
@@ -62,22 +61,6 @@ void debug(risc_vm_t* pCpu, int32_t pAddr) {
         debug_mem(pCpu, pAddr, -1);
 }
 
-#ifdef TEST_SCREEN_DEVICE
-uint32_t i = 0;
-void writeToScreen(char pC, char pCommand, VMWORD pPos) {
-    CPU->ram[i++] = 0x10 ;
-    CPU->ram[i++] = pC ;
-    CPU->ram[i++] = pCommand ;
-    CPU->ram[i++] = 0x2 ;
-    //movlr
-    CPU->ram[i++] = 0x12 ;
-    CPU->ram[i++] = 0x2 ;
-    CPU->ram[i++] = (0x3000 + pPos) & 0xff ;
-    CPU->ram[i++] = ((0x3000 + pPos) >> 8) & 0xff ;
-    //movrm
-} 
-#endif /* TEST_SCREEN_DEVICE */
-
 static risc_vm_t* CPU = NULL;
 void risc_run(risc_vm_t* pCpu) {
 
@@ -94,14 +77,6 @@ void risc_run(risc_vm_t* pCpu) {
 
     CPU = pCpu;
     CPU->opctable = g_opcs0;
-
-#ifdef TEST_SCREEN_DEVICE
-    writeToScreen(' ', 0xff, i);
-    for (uint32_t i = 0; i < RISC_SCREEN_DEVICE_COLUMNS * RISC_SCREEN_DEVICE_ROWS; i++) {
-        writeToScreen('X', 0, i);
-    }
-    CPU->ram[i++] = opc_HALT;
-#endif /* TEST_SCREEN_DEVICE */
 
 #ifdef INSTR_TEST1
     uint32_t i = RISC_ROM_BASE / sizeof(VMWORD);

@@ -8,8 +8,8 @@ LIBS =
 PROGS = vmbleem
 
 OBJECTS = \
-    risc/devices/screen.o \
-	risc/cpu.o \
+    risc/devices/video.o \
+    risc/cpu.o \
     risc/error.o \
     risc/exception.o \
     risc/loader.o \

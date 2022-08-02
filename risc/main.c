@@ -11,11 +11,11 @@
 risc_vm_t* g_cpu = NULL;
 
 void initialize_devices() {
-    device_SCREEN.initialize();
+    device_VIDEO.initialize();
 }
 
 /*void finalize_devices() {
-    device_SCREEN.finalize();
+    device_VIDEO.finalize();
 }*/
 
 void do_exit() {
@@ -53,8 +53,8 @@ int main(int argc, char** argv) {
     
     /* Initial memory map. */
     risc_map_memory(g_cpu, NULL, 0, RISC_TOTAL_MEMORY_BYTES - 1, 0);
-    /* Map and initialize screen device. */
-    risc_map_memory(g_cpu, &device_SCREEN, RISC_CONSOLE_IO_BASE,
+    /* Map and initialize video device. */
+    risc_map_memory(g_cpu, &device_VIDEO, RISC_CONSOLE_IO_BASE,
         RISC_CONSOLE_IO_LIMIT, RISC_CONSOLE_IO_BASE);
     
     initialize_devices();
