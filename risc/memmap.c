@@ -14,7 +14,8 @@ void risc_map_memory(risc_vm_t* pCpu,
     risc_device_t* pDevice, VMWORD pBase, VMWORD pLimit, VMWORD pRemap) {
     if(pCpu->n_memregions >= RISC_TOTAL_MEMORY_REGIONS)
         risc_panic(pCpu,
-            "unable to map memory:\n    device=%s (0x%x) base=0x%x limit=0x%x remap=0x%x",
+            "unable to map memory:\n    device=%s (0x%x) base=0x%x limit=0x%x remap=0x%x\n"
+            "not enough memory region slots",
             THIS_FILE, __LINE__,
             pDevice->name, pDevice, pBase, pLimit, pRemap);
     pCpu->memregions[pCpu->n_memregions].device = pDevice;

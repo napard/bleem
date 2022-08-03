@@ -110,6 +110,14 @@ __OPC_MOV_IMM16_REG: // mov imm16, reg
     NEXT_I
 }
 
+__OPC_MOV_IMM20_REG: // mov imm20, reg
+{
+    r1 = (fetch >> 8) & 0xf;
+    SET_REGISTER(r1, (fetch >> 12) & 0xfffff);
+    RISC_TRACE("mov imm20, r1");
+    NEXT_I
+}
+
 __OPC_MOV_REG_REG: // mov reg, reg
 {
     r1 = (fetch >> 8) & 0xf;
@@ -119,7 +127,7 @@ __OPC_MOV_REG_REG: // mov reg, reg
     NEXT_I
 }
 
-__OPC_MOV_REG_MEM: // mov r2, [r1:imm16]
+__OPC_MOV_REG_MEM16: // mov r2, [r1:imm16]
 {
     r1 = (fetch >> 8) & 0xf; // base
     r2 = (fetch >> 12) & 0xf; // data
@@ -129,7 +137,7 @@ __OPC_MOV_REG_MEM: // mov r2, [r1:imm16]
     NEXT_I
 }
 
-__OPC_MOV_MEM_REG: // mov [r1:imm16], r2
+__OPC_MOV_MEM16_REG: // mov [r1:imm16], r2
 {
     r1 = (fetch >> 8) & 0xf; // base
     r2 = (fetch >> 12) & 0xf; // data
@@ -156,6 +164,15 @@ __OPC_MOV_REG_PTR_REG: // mov [r1], r2
     r2 = (fetch >> 12) & 0xf;
     SET_REGISTER(r2, risc_get_word(CPU, CPU->registers[r1]));
     RISC_TRACE("mov [r1], r2");
+    NEXT_I
+}
+
+__OPC_MOV_REG_REG_PTR: // mov r1, [r2]
+{
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    risc_set_word(CPU, CPU->registers[r1], CPU->registers[r2]);
+    RISC_TRACE("mov r1, [r2]");
     NEXT_I
 }
 
@@ -420,6 +437,8 @@ __OPC_NOT:
 __OPC_HALT:
 {
     printf("SYSTEM HALTED\n");
+    RISC_GETCHAR;
+    exit(0);
     CPU->registers[reg_IP] -= sizeof(VMWORD);
     sleep(5);
     NEXT_I
@@ -561,13 +580,15 @@ __OPC_RET:
 {
     o(NOP)
     o(MOV_IMM16_REG)
+    o(MOV_IMM20_REG)
     o(MOV_REG_REG)
-    o(MOV_REG_MEM)
-    o(MOV_MEM_REG)
+    o(MOV_REG_MEM16)
+    o(MOV_MEM16_REG)
 #if 0
     o(MOV_LIT_MEM)
 #endif
     o(MOV_REG_PTR_REG)
+    o(MOV_REG_REG_PTR)
 #if 0
     o(MOV_LIT_OFF_REG)
 #endif

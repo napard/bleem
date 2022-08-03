@@ -34,6 +34,8 @@ LDFLAGS += `sdl2-config --libs`
 all: $(PROGS)
 
 $(PROGS): $(OBJECTS)
+	$(shell ./buildcharset.sh)
+	$(shell ./buildrom.sh)
 	$(CC) $(DBGFLAGS) -o $(PROGS) $(OBJECTS) $(LDFLAGS) $(LIBS)
 
 .SUFFIXES:
@@ -44,6 +46,7 @@ $(PROGS): $(OBJECTS)
 
 clean:
 	rm -f $(OBJECTS) $(PROGS)
+	rm -f testrom.c testrom.o testrom.bin
 
 .PHONY: all
 .PHONY: clean

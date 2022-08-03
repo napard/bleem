@@ -4,7 +4,8 @@ switches       0x00000004-0x00000007         (4 bytes)
 char sets(1)   0x00000800-0x00001fff
 rom code       0x00002000-0x00003fff         (8KB ROM code)
                ...
-stack          0x000ef830-0x000ff82f         (64KB stack)
+stack          0x000ef7f0-0x000ff7ef         (64KB stack)
+video dev IO   0x000ff7f0-0x000ff82f         (64 bytes)
 console        0x000ff830-0x000fffff         (2000 bytes)
 
 (1) 3 charsets of 256 (2KB) chars each.

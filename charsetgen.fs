@@ -1,7 +1,7 @@
-\ Charset generator (31 Jul2022).
+\ Charset generator (31Jul2022).
 
-vocabulary charsetgen
-also charsetgen  definitions
+vocabulary bleem-charsetgen
+also bleem-charsetgen  definitions
 
 variable bitshift  0 bitshift !
 : gen-bit

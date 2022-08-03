@@ -38,12 +38,12 @@
 /* Total RAM bytes. */
 #define RISC_TOTAL_MEMORY_BYTES       (1024*1024)
 /* Total memory mapped regions. */
-#define RISC_TOTAL_MEMORY_REGIONS     2
+#define RISC_TOTAL_MEMORY_REGIONS     8
 /* Total device name chars. */
 #define RISC_TOTAL_DEVICENAME_CHARS   16
 
 #define RISC_ROM_CODE_BASE            0x00001000
-#define RISC_STACK_BASE               0x000ef830
+#define RISC_STACK_BASE               0x000ef7f0
 #define RISC_CHARSET0_BASE            0x00000800
 
 #define RISC_MALLOC                   malloc
@@ -54,16 +54,16 @@ enum risc_opcode_t {
     opc_NOP =                 0x00,
     opc_MOV_IMM16_REG =       0x10,
     opc_MOV_REG_REG =         0x11,
-    opc_MOV_REG_MEM =         0x12,
-    opc_MOV_MEM_REG =         0x13,
-#if 0
-    opc_MOV_LIT_MEM =         0x14,
-#endif
+    opc_MOV_REG_MEM16 =       0x12,
+    opc_MOV_MEM16_REG =       0x13,
+    opc_MOV_IMM20_REG =       0x14,
     opc_MOV_REG_PTR_REG =     0x15,
+    opc_MOV_REG_REG_PTR =     0x16,
 #if 0
-    opc_MOV_LIT_OFF_REG =     0x16,
-
+    opc_MOV_REG_MEM20 =       0x16,
+    opc_MOV_MEM20_REG =       0x17,
 #endif
+
     opc_ADD_REG_REG =         0x24,
 #if 0
     opc_ADD_LIT_REG =         0x25,
@@ -153,17 +153,6 @@ enum risc_opcode_t {
 #define RISC_LOG_INFO(cpu, msg, src_file, src_line, ...) risc_log_info(cpu, msg, src_file, src_line, __VA_ARGS__)
 //#define RISC_LOG_INFO(cpu, msg, src_file, src_line, ...)
 
-//#define RISC_INSTR_TRACING
-#ifdef RISC_INSTR_TRACING
-    void debug(int32_t pAddr);
-    #define RISC_TRACE(name) \
-        printf("   %s    \n", name); \
-        debug(CPU->registers[reg_IP]); /*\
-        RISC_GETCHAR;*/
-#else
-    #define RISC_TRACE(name)
-#endif /* RISC_INSTR_TRACING */
-    
 typedef uint32_t VMWORD;    /* VM word. */
 typedef int32_t SVMWORD;    /* Signed VM word. */
 typedef int16_t SHWORD;     /* Signed half word. */
@@ -218,10 +207,11 @@ typedef struct _risc_display_t {
 #ifdef RISC_VIDEO_DEVICE_SDL2
     SDL_Window* sdl2_window;
     SDL_Renderer* sdl2_renderer;
-    SDL_Surface* sdl2_window_surface;
+    SDL_Texture* sdl2_screen_texture;
 #else
 #error SDL2 display is not enabled.
 #endif /* RISC_VIDEO_DEVICE_SDL2 */
+    uint32_t* screen_pixels;
 } risc_display_t;
 
 typedef struct _risc_vm_t {
@@ -240,6 +230,17 @@ typedef struct _risc_vm_t {
     risc_display_t display;
 } risc_vm_t;
 
+#define RISC_INSTR_TRACING
+#ifdef RISC_INSTR_TRACING
+    void debug(risc_vm_t* pCpu, int32_t pAddr);
+    #define RISC_TRACE(name) \
+        printf("   %s    \n", name); \
+        debug(CPU, CPU->registers[reg_IP]); /*\
+        RISC_GETCHAR;*/
+#else
+    #define RISC_TRACE(name)
+#endif /* RISC_INSTR_TRACING */
+    
 /* error.c */
 
 void risc_cpu_exception(risc_vm_t* pCpu, const char* pMsg, const char* pSrcFile, uint32_t pSrcLine, ...);
@@ -261,7 +262,7 @@ void risc_destroy_memory(uint8_t* pMem);
 
 /* cpu.c */
 
-risc_vm_t* risc_create_cpu(uint8_t* pRam);
+risc_vm_t* risc_create_cpu();
 void risc_destroy_cpu(risc_vm_t* pCpu);
 void risc_run();
 void debug_mem(risc_vm_t* pCpu, VMWORD pAddr, int32_t pCount);
@@ -270,6 +271,7 @@ void debug(risc_vm_t* pCpu, int32_t pAddr);
 /* log.c */
 
 void risc_log_info(risc_vm_t* pCpu, const char* pMsg, const char* pSrcFile, uint32_t pSrcLine, ...);
+void risc_log_warn(risc_vm_t* pCpu, const char* pMsg, const char* pSrcFile, uint32_t pSrcLine, ...);
 
 /* loader.c */
 

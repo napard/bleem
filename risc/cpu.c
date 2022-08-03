@@ -10,13 +10,13 @@
 
 //#define INSTR_TEST1
 //#define INSTR_TEST2
-#define INSTR_TEST3
+//#define INSTR_TEST3
 
 static const char* THIS_FILE = "cpu.h";
 
-risc_vm_t* risc_create_cpu(uint8_t* pRam) {
+risc_vm_t* risc_create_cpu() {
     risc_vm_t* cpu = RISC_MALLOC(sizeof(risc_vm_t));
-    cpu->ram = pRam;
+    cpu->ram = risc_create_memory(RISC_TOTAL_MEMORY_BYTES);
     cpu->registers = (VMWORD*)risc_create_memory(reg_NUM_REGS * sizeof(VMWORD));
     cpu->registers[reg_IP] = RISC_ROM_CODE_BASE;
     cpu->registers[reg_SP] = cpu->registers[reg_FP] = RISC_STACK_BASE;
@@ -49,7 +49,7 @@ void debug_mem(risc_vm_t* pCpu, VMWORD pAddr, int32_t pCount) {
 }
 
 void debug(risc_vm_t* pCpu, int32_t pAddr) {
-    printf("DEBUG -----\n");
+    printf("TRACE -----\n");
     printf("IP=%08X  %-10d  SP=%08X FP=%08X FLAGS=%s%s%s%s\n",
         pCpu->registers[reg_IP], pCpu->registers[reg_IP], pCpu->registers[reg_SP], pCpu->registers[reg_FP],
         GET_FLAG(pCpu, FLAG_Z)? "Z":"-", GET_FLAG(pCpu, FLAG_V)? "V":"-", GET_FLAG(pCpu, FLAG_C)? "C":"-", GET_FLAG(pCpu, FLAG_N)? "N":"-");

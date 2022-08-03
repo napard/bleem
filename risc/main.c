@@ -11,11 +11,12 @@
 risc_vm_t* g_cpu = NULL;
 
 void initialize_devices() {
-    device_VIDEO.initialize();
+    device_VIDEORAM.initialize();
+    device_VIDEOCTL.initialize();
 }
 
 /*void finalize_devices() {
-    device_VIDEO.finalize();
+    device_VIDEORAM.finalize();
 }*/
 
 void do_exit() {
@@ -42,8 +43,7 @@ int main(int argc, char** argv) {
     sigaction(SIGFPE, &sa, NULL);
 #endif /* __linux__ */
 
-    g_cpu = risc_create_cpu(
-        risc_create_memory(RISC_TOTAL_MEMORY_BYTES));
+    g_cpu = risc_create_cpu();
 
     /* Init 'bootloader' ------------------------------------------------------ */
 
@@ -54,12 +54,14 @@ int main(int argc, char** argv) {
     /* Initial memory map. */
     risc_map_memory(g_cpu, NULL, 0, RISC_TOTAL_MEMORY_BYTES - 1, 0);
     /* Map and initialize video device. */
-    risc_map_memory(g_cpu, &device_VIDEO, RISC_CONSOLE_IO_BASE,
-        RISC_CONSOLE_IO_LIMIT, RISC_CONSOLE_IO_BASE);
+    risc_map_memory(g_cpu, &device_VIDEORAM, RISC_CONSOLE_DATA_BASE,
+        RISC_CONSOLE_DATA_LIMIT, RISC_CONSOLE_DATA_BASE);
+    risc_map_memory(g_cpu, &device_VIDEOCTL, RISC_VIDEO_CONTROL_REG,
+        RISC_VIDEO_CONTROL_REG + 63, RISC_VIDEO_CONTROL_REG);
     
     initialize_devices();
     
-    RISC_GETCHAR;
+    /*RISC_GETCHAR;*/
     debug(g_cpu, g_cpu->registers[reg_IP]);
     risc_run(g_cpu);
 }

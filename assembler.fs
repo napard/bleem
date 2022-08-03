@@ -1,12 +1,12 @@
 \ Rudimentary assembler (25Jul2022).
 
-vocabulary assembler
-also assembler  definitions
+vocabulary bleem-assembler
+also bleem-assembler  definitions
 
 4 constant VMWORD-BYTES  \ Bytes per word.
-8192 constant CODE-BYTES \ Size of assembly buffer.
+8192 constant CODE-BYTES \ Size of code buffer.
 
-variable codebuff  CODE-BYTES allot \ Assembly buffer.
+variable codebuff  CODE-BYTES allot \ Assembly code buffer.
 variable origin  0 origin !         \ Origin address.
 variable asmip   0 asmip !          \ Assemble address.
 variable fwdjmp  0 fwdjmp !         \ Forward jump flag.
@@ -19,6 +19,10 @@ variable fwdjmp  0 fwdjmp !         \ Forward jump flag.
   dup 16 rshift $ff and r>   dup 1 + >r  c!
       24 rshift $ff and r>               c!
   incIp ;
+
+: byte,  ( u -- )
+  codebuff  asmip @ +  c!
+  1 asmip +! ;
 
 : vmword!  ( u addr -- )
   >r
@@ -36,6 +40,20 @@ variable fwdjmp  0 fwdjmp !         \ Forward jump flag.
     dup  codebuff + c@  s" CPU->ram[i++] = " type  u.  [char] ; emit cr
     1+
   loop drop ;
+
+: dc3 ( u-offset u -- )
+  0 do
+    dup  codebuff + c@  u.  [char] , emit cr
+    1+
+  loop drop ;
+
+: start-rom
+  s" #include <stdint.h>" type cr
+  s" uint8_t rom[] = {" type cr ;
+: end-rom  s" };" type cr ;
+
+: dd  ( u-vmword-offset -- ) \ Dump data.
+  VMWORD-BYTES *  codebuff +  384 dump ; 
 
 \ Comment. -----
 : '  ['] s" execute 2drop ;
@@ -63,6 +81,19 @@ variable fwdjmp  0 fwdjmp !         \ Forward jump flag.
   swap    origin @ -  codebuff + @  $ffffffff and  or
   swap    origin @ -  codebuff +  vmword! ;
 
+variable dtmp
+: reverse  ( i*x i -- i*y ) 0 do i roll loop ;
+: #DATA8  ( ... u -- )
+  #LABEL  dup dtmp !  reverse
+  dtmp @  0 do byte, loop cr ;
+
+: #DATA16  ( ... u -- )
+  #LABEL  dup dtmp !  reverse
+  dtmp @  0 do
+    dup  $ff and  byte,
+         8 rshift  $ff and  byte,
+  loop cr ;
+
 \ Instruction encoding. -----
 
 : encode-op  ;
@@ -70,6 +101,7 @@ variable fwdjmp  0 fwdjmp !         \ Forward jump flag.
 : encode-reg2  12 lshift $f000 and ;
 : encode-reg3  16 lshift $f0000 and ;
 : encode-imm16  16 lshift $ffff0000 and ;
+: encode-imm20  12 lshift $fffff000 and ;
 : 2or or or ;
 : 3or or or or ;
 
@@ -80,6 +112,9 @@ variable fwdjmp  0 fwdjmp !         \ Forward jump flag.
 
 : movi16r \ $ffff r1 movi16r
   encode-reg1 swap  encode-imm16 swap  $10 encode-op  2or vmword, ;
+
+: movir \ $fffff r1 movi16r
+  encode-reg1 swap  encode-imm20 swap  $14 encode-op  2or vmword, ;
 
 : movrr \ r1 r2 movrr
   encode-reg2 swap  encode-reg1 swap  $11 encode-op  2or vmword, ;
@@ -92,6 +127,9 @@ variable fwdjmp  0 fwdjmp !         \ Forward jump flag.
 
 : movr*r \ r1 r2 movr*r
   encode-reg2 swap  encode-reg1 swap  $15 encode-op  2or vmword, ;
+
+: movrr* \ r1 r2 movr*r
+  encode-reg2 swap  encode-reg1 swap  $16 encode-op  2or vmword, ;
 
 : addrr \ r1 r2 r3 addrr
   encode-reg3 swap  encode-reg2  >r >r encode-reg1 r> r>  $24 encode-op  3or vmword, ;
@@ -183,7 +221,7 @@ variable fwdjmp  0 fwdjmp !         \ Forward jump flag.
 
 \ Test -----------------------------------------------------------------------------------------------------------------
 
-(
+( \ EXAMPLE 1
 $1000 #ORG
 
 #LABEL _start
@@ -207,6 +245,7 @@ $1000 #ORG
     %r4 %r5 %r6     sbcrr
 )
 
+( \ EXAMPLE 2
 $1000 #ORG
 
 #LABEL _start
@@ -217,8 +256,15 @@ $1000 #ORG
     %r5 %r6         movrr
     tt #<PATCH
     hlt
+)
 
-0 50 $1000 dc2
+( \ EXAMPLE 3
+$1000 #ORG
+
+1 2 3 4 5   5 #DATA8 my_data8
+$1234 $5678 2 #DATA16 my_data16
+)
+
 
 
 
