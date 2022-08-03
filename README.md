@@ -9,10 +9,11 @@ But first of all, Bleem is a personal vision and framework to experiment with lo
 
 It is by no means an attempt to emulate a possible hardware implementation, so, it's serious, but as serious as it can be. There are possibly many aspects that are not viable in a real implementation, I'm not a hardware expert.
 
+![alt text](https://github.com/napard/bleem/blob/main/doc/screenshot1.png?raw=true)
+
 -----
 
 ## Specifications
-</br>
 
 ### CPU
 
