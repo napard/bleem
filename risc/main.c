@@ -28,14 +28,14 @@ int main(int argc, char** argv) {
     
 #ifdef __linux__
     struct sigaction sa;
-    // Initialize SIGSEGV exection handler.
+    /* Initialize SIGSEGV exection handler. */
     memset(&sa, 0, sizeof(struct sigaction));
     sigemptyset(&sa.sa_mask);
     sa.sa_sigaction = (void (*)(int, siginfo_t*, void*)) risc_segfault_sigaction;
     sa.sa_flags = SA_SIGINFO;
     sigaction(SIGSEGV, &sa, NULL);
 
-    // Initialize SIGFPE exection handler.
+    /* Initialize SIGFPE exection handler. */
     memset(&sa, 0, sizeof(struct sigaction));
     sigemptyset(&sa.sa_mask);
     sa.sa_sigaction = (void (*)(int, siginfo_t*, void*)) risc_fp_exception_sigaction;
@@ -56,8 +56,8 @@ int main(int argc, char** argv) {
     /* Map and initialize video device. */
     risc_map_memory(g_cpu, &device_VIDEORAM, RISC_CONSOLE_DATA_BASE,
         RISC_CONSOLE_DATA_LIMIT, RISC_CONSOLE_DATA_BASE);
-    risc_map_memory(g_cpu, &device_VIDEOCTL, RISC_VIDEO_CONTROL_REG,
-        RISC_VIDEO_CONTROL_REG + 63, RISC_VIDEO_CONTROL_REG);
+    risc_map_memory(g_cpu, &device_VIDEOCTL, RISC_VIDEO_CONTROL_BASE,
+        RISC_VIDEO_CONTROL_BASE + 63, RISC_VIDEO_CONTROL_BASE);
     
     initialize_devices();
     

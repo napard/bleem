@@ -1,0 +1,6 @@
+(1+2) if.
+  4 and: 5
+~else
+    ~getChar (? - 30) emit
+~endif
+

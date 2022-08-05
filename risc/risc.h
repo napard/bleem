@@ -27,7 +27,7 @@
 #define RISC_VIDEO_DEVICE_SDL2
 #define RISC_SDL2_RENDERER_FLAGS SDL_RENDERER_ACCELERATED
 
-/* Compilation flags dependant includes -------------------------------------*/
+/* Includes depending on compilation flags. ----------------------------------*/
 
 #ifdef RISC_VIDEO_DEVICE_SDL2
 #include <SDL.h>
@@ -41,6 +41,8 @@
 #define RISC_TOTAL_MEMORY_REGIONS     8
 /* Total device name chars. */
 #define RISC_TOTAL_DEVICENAME_CHARS   16
+
+#define RISC_REQUESTED_CYCLES_PER_SEC 8000000
 
 #define RISC_ROM_CODE_BASE            0x00001000
 #define RISC_STACK_BASE               0x000ef7f0
@@ -59,6 +61,10 @@ enum risc_opcode_t {
     opc_MOV_IMM20_REG =       0x14,
     opc_MOV_REG_PTR_REG =     0x15,
     opc_MOV_REG_REG_PTR =     0x16,
+
+    opc_MOV_BREG_REG_PTR =    0x17,
+    opc_MOV_REG_PTR_BREG =    0x18,
+
 #if 0
     opc_MOV_REG_MEM20 =       0x16,
     opc_MOV_MEM20_REG =       0x17,
@@ -151,7 +157,7 @@ enum risc_opcode_t {
 #endif /* RISC_EMULATED_CLOCK */
 
 #define RISC_LOG_INFO(cpu, msg, src_file, src_line, ...) risc_log_info(cpu, msg, src_file, src_line, __VA_ARGS__)
-//#define RISC_LOG_INFO(cpu, msg, src_file, src_line, ...)
+/*#define RISC_LOG_INFO(cpu, msg, src_file, src_line, ...)*/
 
 typedef uint32_t VMWORD;    /* VM word. */
 typedef int32_t SVMWORD;    /* Signed VM word. */
@@ -230,7 +236,7 @@ typedef struct _risc_vm_t {
     risc_display_t display;
 } risc_vm_t;
 
-#define RISC_INSTR_TRACING
+//#define RISC_INSTR_TRACING
 #ifdef RISC_INSTR_TRACING
     void debug(risc_vm_t* pCpu, int32_t pAddr);
     #define RISC_TRACE(name) \
@@ -288,6 +294,10 @@ void risc_segfault_sigaction(int32_t pSignal, siginfo_t* pSiginfo,
     void** p_arg);
 void risc_fp_exception_sigaction(int32_t pSignal, siginfo_t* pSiginfo,
     void** p_arg);
+
+/* time.c */
+
+double risc_get_elapsed_time();
 
 /* devices/video.c -- Video device */
 

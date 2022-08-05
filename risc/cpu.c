@@ -8,10 +8,6 @@
 
 #include "risc.h"
 
-//#define INSTR_TEST1
-//#define INSTR_TEST2
-//#define INSTR_TEST3
-
 static const char* THIS_FILE = "cpu.h";
 
 risc_vm_t* risc_create_cpu() {
@@ -64,10 +60,19 @@ void debug(risc_vm_t* pCpu, int32_t pAddr) {
 static risc_vm_t* CPU = NULL;
 void risc_run(risc_vm_t* pCpu) {
 
-    static uint8_t r1, r2, r3;
+    static double fixed_time_step = 1000.0 / RISC_REQUESTED_CYCLES_PER_SEC;
+    static double timepoint1, timepoint2, lag = 0.0;
+    static float last_elapsed;
     static SHWORD soffs;
     static VMWORD word, fetch;
     static risc_opc_handler_t g_opcs0[RISC_MAX_OPCODES];
+    static uint8_t r1, r2, r3;
+#ifdef _DEBUG        
+    static uint32_t instr_per_secs = 0;
+    static double accum_time = 0.0;
+#endif /* _DEBUG */
+    
+    /* Clear opcode table. */
     for(uint32_t i = 0; i < RISC_MAX_OPCODES; i++)
         g_opcs0[i] = &&__INVALID_OPCODE;
 
@@ -78,69 +83,41 @@ void risc_run(risc_vm_t* pCpu) {
     CPU = pCpu;
     CPU->opctable = g_opcs0;
 
-#ifdef INSTR_TEST1
-    uint32_t i = RISC_ROM_BASE / sizeof(VMWORD);
-    ENCODE_INSTR_IMM(i, opc_MOV_IMM16_REG, reg_R2, 0, 0x666);i++;
-    ENCODE_INSTR_IMM(i, opc_MOV_IMM16_REG, reg_R7, 0, 0x665);i++;
-    ENCODE_INSTR_REG(i, opc_SUB_REG_REG, reg_R2, reg_R7, reg_R3);i++;
-    ENCODE_INSTR_IMM(i, opc_JMP_GE, 0, 0, -12);i++;
-    ENCODE_INSTR_IMM(i, opc_HALT, 0, 0, 0);i++;
-#endif /* INSTR_TEST1 */
-
-#ifdef INSTR_TEST2
-    uint32_t i = RISC_ROM_BASE / sizeof(VMWORD);
-    ENCODE_INSTR_IMM(i, opc_MOV_IMM16_REG, reg_R2, 0, -9);i++;
-    ENCODE_INSTR_IMM(i, opc_MOV_IMM16_REG, reg_R7, 0, 5);i++;
-    ENCODE_INSTR_REG(i, opc_MUL_REG_REG, reg_R2, reg_R7, reg_R3);i++;
-    ENCODE_INSTR_IMM(i, opc_HALT, 0, 0, 0);i++;
-#endif /* INSTR_TEST2 */
-
-#ifdef INSTR_TEST3
-    uint32_t i = 4096 ;
-    CPU->ram[i++] = 17 ;
-    CPU->ram[i++] = 33 ;
-    CPU->ram[i++] = 0 ;
-    CPU->ram[i++] = 0 ;
-
-    CPU->ram[i++] = 64 ;
-    CPU->ram[i++] = 0 ;
-    CPU->ram[i++] = 16 ;
-    CPU->ram[i++] = 0 ;
-
-    CPU->ram[i++] = 64 ;
-    CPU->ram[i++] = 0 ;
-    CPU->ram[i++] = 248 ;
-    CPU->ram[i++] = 255 ;
-
-    CPU->ram[i++] = 17 ;
-    CPU->ram[i++] = 67 ;
-    CPU->ram[i++] = 0 ;
-    CPU->ram[i++] = 0 ;
-
-    CPU->ram[i++] = 17 ;
-    CPU->ram[i++] = 101 ;
-    CPU->ram[i++] = 0 ;
-    CPU->ram[i++] = 0 ;
-
-    CPU->ram[i++] = 255 ;
-    CPU->ram[i++] = 0 ;
-    CPU->ram[i++] = 0 ;
-    CPU->ram[i++] = 0 ;
-#endif /* INSTR_TEST3 */
+    timepoint1 = timepoint2 = risc_get_elapsed_time();
 
 #ifndef RISC_EMULATED_CLOCK
     FETCH32(CPU, fetch);
     goto *CPU->opctable[fetch & 0xff];
 #else
 clock:
-    if(CPU->cycles == 0) {
-        FETCH32(CPU, fetch);
-        CPU->cycles = INSTR_CYCLES(fetch & 0xff);
-        goto *CPU->opctable[fetch & 0xff];
-    }
+    timepoint1 = risc_get_elapsed_time();
+    float elapsed = (timepoint1 - timepoint2);
+    last_elapsed = elapsed * 1000;
+    lag += last_elapsed;
+    
+    if(lag > fixed_time_step) {
+        if(CPU->cycles == 0) {
+#ifdef _DEBUG
+        instr_per_secs++;
+#endif /* _DEBUG */
+            FETCH32(CPU, fetch);
+            CPU->cycles = INSTR_CYCLES(fetch & 0xff);
+            goto *CPU->opctable[fetch & 0xff];
+        }
 c_elapsed:
-    CPU->cycles--;
-    goto clock;    
+        lag -= fixed_time_step;
+        CPU->cycles--;
+    }
+    timepoint2 = timepoint1;
+#ifdef _DEBUG        
+        accum_time += last_elapsed;
+        if(accum_time > 1000.0) {
+            accum_time = 0.0;
+            printf("INSTR PER SECS: %d\n", instr_per_secs);
+            instr_per_secs = 0;
+        }
+#endif /* _DEBUG */
+    goto clock;
 #endif /* !RISC_EMULATED_CLOCK */
 
 #define OPCODE_IMPL

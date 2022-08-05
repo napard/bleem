@@ -29,5 +29,34 @@ Character format
 
 0        8        16
 |--------|--------|
- CHAR     RRRGGGBB 
+ CHAR     RRRGGGBB
+
+API
+---
+
+-----------------------------------------------------------
+
+0x000ff7f0 Command register (WORD)
+
+- Write
+       
+0x00000001 Refresh framebuffer.
+0x00000002 Clear with background color.
+
+-----------------------------------------------------------
+
+0x000ff7f1 Background color register (BYTE)
+
+- Write
+
+-----------------------------------------------------------
+
+0x000ff7f2 Foreground color register (BYTE)
+
+- Write
+
+-----------------------------------------------------------
+
+
+
 

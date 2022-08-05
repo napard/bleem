@@ -16,7 +16,8 @@ OBJECTS = \
     risc/log.o \
     risc/main.o \
     risc/memmap.o \
-    risc/memory.o
+    risc/memory.o \
+    risc/time.o
 
 ifeq ($(DEBUG),1)
     DBGFLAGS = -g2 -O0 -D_DEBUG
@@ -27,7 +28,7 @@ endif
 CFLAGS = $(COMMON_CFLAGS)
 
 CFLAGS += `sdl2-config --cflags`
-LDFLAGS += `sdl2-config --libs`
+LDFLAGS += `sdl2-config --libs` -lm
 
 ##############################
 

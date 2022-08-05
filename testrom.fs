@@ -2,16 +2,24 @@
 
 s" assembler.fs" included
 
-$000ff7f0 constant VIDEO_CTRL_REG
+$000ff7f0 constant VIDEO_CMD_REG
+$000ff7f1 constant VIDEO_BGCOL_REG
 
     $1000 #ORG
 
-    VIDEO_CTRL_REG %r2
-                movir
-    1 %r1       movir
-    %r1 %r2     movrr*
+#LABEL start
+        ' Set clear color.
+        VIDEO_BGCOL_REG %r2 movir
+        $fc %r1 movir
+#BYTE   %r1 %r2 movrr* 
+        ' Clear screen.
+        VIDEO_CMD_REG %r2 movir
+        2 %r1 movir
+        %r1 %r2 movrr*
 
-    hlt
+        ' start jnei16
+
+        hlt
 
 \ Dump code.
 start-rom

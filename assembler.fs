@@ -10,6 +10,7 @@ variable codebuff  CODE-BYTES allot \ Assembly code buffer.
 variable origin  0 origin !         \ Origin address.
 variable asmip   0 asmip !          \ Assemble address.
 variable fwdjmp  0 fwdjmp !         \ Forward jump flag.
+variable byteop  0 byteop !         \ Byte length instruction.
 : incIp  VMWORD-BYTES asmip +! ;
 
 : vmword,  ( u -- )
@@ -76,6 +77,7 @@ variable fwdjmp  0 fwdjmp !         \ Forward jump flag.
 : #ORG  origin ! ;
 : #LABEL  create  asmip @  origin @ + , does> @ ; 
 : #FWD  fwdjmp on ;
+: #BYTE  byteop on ;
 : #<PATCH  dup dup  asmip @  origin @ +
   swap -  16 lshift
   swap    origin @ -  codebuff + @  $ffffffff and  or
@@ -126,10 +128,14 @@ variable dtmp
   encode-reg2 swap  encode-imm16 swap  >r >r encode-reg1 r> r>  $13 encode-op  3or vmword, ;
 
 : movr*r \ r1 r2 movr*r
-  encode-reg2 swap  encode-reg1 swap  $15 encode-op  2or vmword, ;
+  encode-reg2 swap  encode-reg1 swap
+  byteop @  if byteop off  $18 else $15 then  encode-op
+  2or vmword, ;
 
 : movrr* \ r1 r2 movr*r
-  encode-reg2 swap  encode-reg1 swap  $16 encode-op  2or vmword, ;
+  encode-reg2 swap  encode-reg1 swap
+  byteop @  if byteop off  $17 else $16 then  encode-op
+  2or vmword, ;
 
 : addrr \ r1 r2 r3 addrr
   encode-reg3 swap  encode-reg2  >r >r encode-reg1 r> r>  $24 encode-op  3or vmword, ;

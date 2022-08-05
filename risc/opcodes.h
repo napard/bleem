@@ -167,12 +167,30 @@ __OPC_MOV_REG_PTR_REG: // mov [r1], r2
     NEXT_I
 }
 
+__OPC_MOV_REG_PTR_BREG: // mov [r1], r2:8
+{
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    SET_REGISTER(r2, risc_get_byte(CPU, CPU->registers[r1]));
+    RISC_TRACE("mov [r1], r2:8");
+    NEXT_I
+}
+
 __OPC_MOV_REG_REG_PTR: // mov r1, [r2]
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
     risc_set_word(CPU, CPU->registers[r1], CPU->registers[r2]);
     RISC_TRACE("mov r1, [r2]");
+    NEXT_I
+}
+
+__OPC_MOV_BREG_REG_PTR: // mov r1:8, [r2]
+{
+    r1 = (fetch >> 8) & 0xf;
+    r2 = (fetch >> 12) & 0xf;
+    risc_set_byte(CPU, CPU->registers[r1], CPU->registers[r2]);
+    RISC_TRACE("mov r1:8, [r2]");
     NEXT_I
 }
 
@@ -589,6 +607,8 @@ __OPC_RET:
 #endif
     o(MOV_REG_PTR_REG)
     o(MOV_REG_REG_PTR)
+    o(MOV_REG_PTR_BREG)
+    o(MOV_BREG_REG_PTR)
 #if 0
     o(MOV_LIT_OFF_REG)
 #endif
