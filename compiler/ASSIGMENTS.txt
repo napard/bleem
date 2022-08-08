@@ -1,0 +1,84 @@
+References: T3X language, Niklaus Wirth compile construction.
+
+2.7.1 Assignments
+
+        An assignment transfers the value of an expression to a specific
+        storage location. For example, the statement
+
+        A := B;
+
+        copies the value of B to A. After the assignment, both variables
+        will have the same value. The previous value of A is thereby
+        lost.
+
+        The right-hand side (RHS) of an assignment may be any valid
+        expression as described in the previous section. The left-hand
+        side is restricted to a subset of expressions that is often
+        referred to as LHS values or lvalues (left-hand side values).
+        In T3X, each lvalue may be any of the following:
+
+        - atomic variables
+        - vector members
+        - byte vector members
+        - structure members
+
+        where vector members and structure members are essentially the
+        same.
+
+        Assignments to vector members are not limited to direct members
+        of a vector. Addressing elements of multiply nested vectors is
+        perfectly valid. The evaluation of variables on left-hand and
+        right-hand sides of assignments was explained in detail in the
+        section about factors. In short, RHS variables evaluate to their
+        values and LHS variables evaluate to their addresses. The
+        assignment operator := first evaluates the expression on its
+        left side. Then it evaluates the expression to its right and
+        stores the result at the address denoted by the LHS.
+
+        A generalization of the evaluation of left-hand sides is the
+        following: All but the last reference on a left-hand side of an
+        assignment evaluates to its value. Only the last reference
+        evaluates to its address. Here are some examples:
+
+        A := B;
+
+        The symbol A references a specific storage location. Since it is
+        the only reference in the lvalue, it evaluates to its address.
+        In the statement
+
+        A[i] := B;
+
+        A is not the last reference and hence it yields its value (which
+        is its address, because  A is a vector). The operation [i]
+        references the I'th member of A. Since it is the last reference
+        on the LHS, it evaluates to the address of A[i] instead of its
+        value. Consequently, the following assignment operator stores B
+        at the address of the I'th member of A. The same is valid for
+        accessing vector elements at any nesting level. The statement
+
+        A[i1][i2][i3][i4] := B;
+
+        for example, stores B in the i4'th member of A[i1][i2][i3].
+
+        Accessing byte vectors works in the same way:
+
+        A::i := B;
+
+        stores the least significant eight bits of B in the I'th byte of
+        A.
+
+        Since :: associates to the right, the last evaluated reference
+        is the leftmost one in chains of byte operators like
+
+        A::B::i := C;
+
+        Because B::i will be evaluated first in this example, it will
+        yield its value. Then, the address of A::(B::i) is computed.
+        Since no more references follow after A::, the (least
+        significant eight bits of the) value of C will be stored in the
+        (B::i)'th byte of A.
+
+        Note: Although the assignment symbol := looks like an operator
+        (and is frequently even referred to as such), it may not be used
+        inside of expressions, but only to combine expressions. It is a
+        command rather than an operator.

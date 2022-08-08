@@ -1,0 +1,75 @@
+DATA8 1, 2, 3, 4
+DATA8 "This is a test", 0
+
+DATA  1, 2, 3, 5
+
+CONST Test 7
+
+    NOP
+    MOV         $1234, R1
+    MOV         $12345, R1
+    MOV         R1, R2
+
+    MOV         R2, [R1:$1234]
+    MOV         [R1:$1234], R2
+    MOV BYTE    R2, [R1:$1234]
+    MOV BYTE    [R1:$1234], R2
+
+    // Scaling
+    MOV         R2, [R1:$1234, 8]
+    MOV         [R1:$1234, 8], R2
+    MOV BYTE    R2, [R1:$1234, 8]
+    MOV BYTE    [R1:$1234, 8], R2
+    // ~
+
+    // Indirect
+    MOV         R2, <R1:$1234, 8>
+    MOV         <R1:$1234, 8>, R2
+    MOV BYTE    R2, <R1:$1234, 8>
+    MOV BYTE    <R1:$1234, 8>, R2
+    // ~
+
+    MOV         [R1], R2
+    MOV BYTE    [R1], R2
+    MOV         R1, [R2]
+    MOV BYTE    R1, [R2]
+
+    ADD         R1, R2, R3
+    ADC         R1, R2, R3
+    SUB         R1, R2, R3
+    SUBC        R1, R2, R3
+    INC         R1
+    DEC         R1
+    MUL         R1, R2, R3
+    LSH         $1234, R1, R2
+    LSH         R1, R2, R3
+    RSH         $1234, R1, R2
+    RSH         R1, R2, R3
+    AND         R1, R2, R3
+    OR          R1, R2, R3
+    XOR         R1, R2, R3
+    NOT         R1
+    HLT
+
+    JNE         $1234
+    JE          $1234
+    JLT         $1234
+    JLE         $1234
+    JGT         $1234
+    JGE         $1234
+    JC          $1234
+    JNC         $1234
+
+    J*          R1
+    J*          [$1234]
+    J*          <$1234> // Indirect
+
+    PUSH        $12345    
+    PUSH        R1
+    POP         R1
+    CALL        $12345
+    CALL        R1
+    RET
+    IRET
+
+

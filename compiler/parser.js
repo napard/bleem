@@ -8,6 +8,7 @@
 
 "use strict"
 
+const assembler = require('./assembler.js')
 const error = require('./error.js')
 const lexer = require('./lexer.js')
 const _module = require('./module.js')
@@ -23,7 +24,8 @@ exports.SrcSection = Object.freeze({
 
 exports.EntityType = Object.freeze({
     CONST: 1,
-    VARIABLE: 2
+    VARIABLE: 2,
+    DATA: 3
 })
 
 exports.VariableType = Object.freeze({
@@ -31,7 +33,7 @@ exports.VariableType = Object.freeze({
     WORD: 2
 })
 
-let getSectionName = function (section) {
+exports.getSectionName = function (section) {
     switch (section) {
         case exports.SrcSection.TOP: return 'TOP'
         case exports.SrcSection.MODULE_DECLS: return 'MODULE_DECLS'
@@ -43,7 +45,7 @@ let getSectionName = function (section) {
     }
 }
 
-let assertSections = function (config, input, reqSections) {
+exports.assertSections = function (config, input, reqSections) {
     let allowed = false
     reqSections.forEach(element => {
         if (config.srcSection == element) {
@@ -51,20 +53,23 @@ let assertSections = function (config, input, reqSections) {
             return
         }
     })
-    if (!allowed) {
-        error.error(error.ErrorTypes.INVALID_SECTION,
-            ', expected `' + getSectionName(reqSection) +
-            '\', found: `' + getSectionName(config.srcSection) + '\'', config.lineIndex, input)
-    }
+    if (allowed) return
+    let sections = ''
+    reqSections.forEach(element => {
+        sections += exports.getSectionName(element) + ' '
+    });
+    error.error(error.ErrorTypes.INVALID_SECTION,
+        ', expected `' + sections +
+        '\', found: `' + exports.getSectionName(config.srcSection) + '\'', config.lineIndex, input)
 }
 
-let assertParamPresent = function (config, input) {
+exports.assertParamPresent = function (config, input) {
     if (input === undefined)
         error.error(error.ErrorTypes.SYNTAX_ERROR,
             ', not enough parameters', config.lineIndex, config.line)
 }
 
-let assertUniqueSymbol = function (config, input) {
+exports.assertUniqueSymbol = function (config, input) {
     if (_module.searchSymbol(config.currMod, input))
         error.error(error.ErrorTypes.DUPLICATED_SYMBOL,
             '', config.lineIndex, config.line)
@@ -74,19 +79,22 @@ let isAddress = function (input) {
     // TODO
 }
 
-let isConst = function (input, currModName) {
+let isConst = function (input, currModName, allowStringLit = false) {
     let res = undefined
-    // Number literal.
-    if (res = lexer.isNumber(input)) return res
     // Predeclared constant.
     if (res = _module.searchConst(currModName, input)) return res.value
     // Address.
     //if (res = isAddress(input)) return res
+    // String.
+    if (allowStringLit && lexer.isString(input)) return input
+    // Number literal.
+    if ((res = lexer.isNumber(input)) != NaN) return res
+
     return res
 }
 
 exports.getVariableTypeByName = function (token) {
-    if (token[0] == '$')
+    if (token[0] == '&')
         return exports.VariableType.CHAR
     return exports.VariableType.WORD
 }
@@ -94,14 +102,15 @@ exports.getVariableTypeByName = function (token) {
 let resolveConstBinary = function (config, pLhs, pRhs, pBinary, pIndex, pInput) {
     switch (pBinary) {
         /*+ - | * NOT*/
-        case '&__ADD__&':
+        case '^__ADD__^':
             return pLhs + pRhs
-        case '&__SUB__&':
+        case '^__SUB__^':
             return pLhs - pRhs
-        case '&__OR__&':
+        case '^__OR__^':
             return pLhs | pRhs
-        case '&__MUL__&':
+        case '^__MUL__^':
             return pLhs * pRhs
+        // TODO: implement NOT.
         default:
             error.error(error.ErrorTypes.EXPR_NOT_CONST,
                 '', config.lineIndex, pInput)
@@ -109,41 +118,44 @@ let resolveConstBinary = function (config, pLhs, pRhs, pBinary, pIndex, pInput) 
     }
 }
 
-let parseConstTerm = function (config, index, input) {
+let parseConstTerm = function (config, index, input, allowStringLit = false, triggerError = true) {
     let val = undefined
-    if (input[index.index] == '&__LPAREN__&') {
+    if (input[index.index] == '^__LPAREN__^') {
         index.index++
-        while (input[index.index] && input[index.index] != '&__RPAREN__&')
-            val = parseConstExpression(config, index, input)
-        if (input[index.index] != '&__RPAREN__&')
+        while (input[index.index] && input[index.index] != '^__RPAREN__^')
+            val = exports.parseConstExpression(config, index, input, allowStringLit, triggerError)
+        if (input[index.index] != '^__RPAREN__^' && triggerError)
             error.error(error.ErrorTypes.SYNTAX_ERROR, ', unmatched parantheses', config.lineIndex, input)
         index.index++
     } else {
-        if (!(val = isConst(input[index.index], config.currMod))) {
-            if (input[index.index]) {
-                error.error(error.ErrorTypes.MISTAKE, ': `' + input[index.index] + '\'', config.lineIndex, input)
-            } else
-                error.error(error.ErrorTypes.SYNTAX_ERROR, ', expected constant expression', config.lineIndex, input)
+        if ((val = isConst(input[index.index], config.currMod, allowStringLit)) === undefined) {
+            if (triggerError) {
+                if (input[index.index]) {
+                    error.error(error.ErrorTypes.MISTAKE, ': `' + input[index.index] + '\'', config.lineIndex, input)
+                } else
+                    error.error(error.ErrorTypes.SYNTAX_ERROR, ', expected constant expression', config.lineIndex, input)
+            }
         }
         index.index++
     }
     return val
 }
 
-let parseConstExpression = function (config, index, input) {
+exports.parseConstExpression = function (config, index, input, allowStringLit = false, triggerError = true) {
     // TODO: a complex expression involving binaries and parens allows
     //  extra tokens and/or opening/closing parens at the end, fix it.
-    let val = parseConstTerm(config, index, input)
+    let val = parseConstTerm(config, index, input, allowStringLit, triggerError)
     let binary = {}
     while (binary = lexer.isBinary(input[index.index])) {
         index.index++
         let prevVal = val
-        val = parseConstTerm(config, index, input)
+        val = parseConstTerm(config, index, input, allowStringLit, triggerError)
         val = resolveConstBinary(config, prevVal, val, binary, index, input)
     }
     return val
 }
 
+// NOTE: Functional, STAND BY WHILE NOT FUTURE.
 let parse_MODULE = function (config, input) {
     // Check parameter #1 type.
     if (!lexer.isIdentifier(input[1]))
@@ -157,55 +169,64 @@ let parse_MODULE = function (config, input) {
                 ', there is a module with same name', config.lineIndex, input)
     }
     // Check section.
-    assertSections(config, input, [exports.SrcSection.TOP])
+    exports.assertSections(config, input, [exports.SrcSection.TOP])
     config.srcSection++
     // Add new module to dictionary.
     _module.add(config, input[1])
     return 10000
 }
 
+// NOTE: Functional, STAND BY WHILE NOT FUTURE.
 let parse_ENDMODULE = function (config, input) {
     // Check section.
-    assertSections(config, input, [exports.SrcSection.MODULE_BODY])
+    exports.assertSections(config, input, [exports.SrcSection.MODULE_BODY])
     config.srcSection++
     return 10000
 }
 
+// NOTE: Functional, STAND BY WHILE NOT FUTURE.
 let parse_OBJECT = function (config, input) {
     // Check section.
-    assertSections(config, input, [exports.SrcSection.MODULE_DECLS])
+    exports.assertSections(config, input, [exports.SrcSection.MODULE_DECLS])
     config.srcSection++
     return 10000
 }
 
 let parse_FUNCTIONS = function (config, input) {
     // Check section.
-    assertSections(config, input, [exports.SrcSection.OBJECT])
+    //-
+    /* NOTE: STAND BY WHILE NOT FUTURE */
+    /*assertSections(config, input, [exports.SrcSection.OBJECT])*/
+    //+
+    /* NOTE: ADDED WHILE NOT FUTURE */
+    exports.assertSections(config, input, [exports.SrcSection.MODULE_DECLS])
+    //~
     config.srcSection++
     return 10000
 }
 
+// NOTE: Functional, STAND BY WHILE NOT FUTURE.
 let parse_BEGIN = function (config, input) {
     // Check section.
-    assertSections(config, input, [exports.SrcSection.FUNCTIONS])
+    exports.assertSections(config, input, [exports.SrcSection.FUNCTIONS])
     config.srcSection++
     return 10000
 }
 
 let parse_CONST = function (config, input) {
     // Check section.
-    assertSections(config, input, [exports.SrcSection.MODULE_DECLS])
+    exports.assertSections(config, input, [exports.SrcSection.MODULE_DECLS])
     // Check parameter #1 type.
-    assertParamPresent(config, input[1])
+    exports.assertParamPresent(config, input[1])
     if (!lexer.isIdentifier(input[1]))
         error.error(error.ErrorTypes.TOKEN_TYPE_MISMATCH,
             ', expected an identifier', config.lineIndex, input)
     // Check duplicated symbol.
-    assertUniqueSymbol(config, input[1])
+    exports.assertUniqueSymbol(config, input[1])
     // Check parameter #2.
     let val = undefined
-    assertParamPresent(config, input[2])
-    if (val = parseConstExpression(config, { index: 2 }, input)) {
+    exports.assertParamPresent(config, input[2])
+    if ((val = exports.parseConstExpression(config, { index: 2 }, input)) !== undefined) {
         _module.addSymbol(config.currMod, input[1],
             exports.EntityType.CONST, val)
     } else {
@@ -217,19 +238,19 @@ let parse_CONST = function (config, input) {
 
 let parse_VAR = function (config, input) {
     // Check section.
-    assertSections(config, input,
+    exports.assertSections(config, input,
         [exports.SrcSection.MODULE_DECLS,
         exports.SrcSection.OBJECT])
     let index = 1
     do {
         // Check parameter type.
-        assertParamPresent(config, input[index])
+        exports.assertParamPresent(config, input[index])
         if (!(lexer.isIdentifier(input[index]) ||
             lexer.isCharVar(input[index])))
             error.error(error.ErrorTypes.TOKEN_TYPE_MISMATCH,
                 ', expected valid variable name', config.lineIndex, input)
         // Check duplicated symbol.
-        assertUniqueSymbol(config, input[index])
+        exports.assertUniqueSymbol(config, input[index])
         let _var = {
             entityType: exports.EntityType.VARIABLE,
             name: input[index],
@@ -241,13 +262,13 @@ let parse_VAR = function (config, input) {
         index++
         // Check for array dimensions.
         let val = undefined
-        if (input[index] == '&__LBRACK__&') {
+        if (input[index] == '^__LBRACK__^') {
             index++
             let indObj = { index: index }
-            val = parseConstExpression(config, indObj, input)
+            val = exports.parseConstExpression(config, indObj, input)
             _var.arrayLen = val
             index = indObj.index
-            if (input[index] != '&__RBRACK__&')
+            if (input[index] != '^__RBRACK__^')
                 error.error(error.ErrorTypes.SYNTAX_ERROR, ', unmatched brackets', config.lineIndex, input)
             index++
         } else
@@ -256,35 +277,58 @@ let parse_VAR = function (config, input) {
             exports.EntityType.VARIABLE, _var)
         if (_var.arrayLen == 1)
             index++
-        if (input[index] != '&__COMMA__&')
+        if (input[index] != '^__COMMA__^')
             break
         index++
     } while (true)
-    // NOTE: if we break by something that's not '&__COMMA__&', there is
+    // NOTE: if we break by something that's not '^__COMMA__^', there is
     //  possibly a syntax error.
     if (index < input.length)
         error.error(error.ErrorTypes.SYNTAX_ERROR, ', unrecognized trailing content at the end', config.lineIndex, input)
 }
 
 let commands = {
-    'MODULE': parse_MODULE,
-    'ENDMODULE': parse_ENDMODULE,
-    'OBJECT': parse_OBJECT,
+    /*'MODULE': parse_MODULE,*/ // NOTE: STAND BY WHILE NOT FUTURE
+    /*'ENDMODULE': parse_ENDMODULE,*/ // NOTE: STAND BY WHILE NOT FUTURE
+    /*'OBJECT': parse_OBJECT,*/ // NOTE: STAND BY WHILE NOT FUTURE
     'FUNCTIONS': parse_FUNCTIONS,
-    'BEGIN': parse_BEGIN,
+    /*'BEGIN': parse_BEGIN,*/ // NOTE: STAND BY WHILE NOT FUTURE
     'CONST': parse_CONST,
-    'VAR': parse_VAR
+    'VAR': parse_VAR,
+
+    'DATA': assembler.parse_DATA,
+    'DATA8': assembler.parse_DATA8,
+    'NOP': assembler.parse_OPCODE,
+    'MOV': assembler.parse_OPCODE,
 }
 
 exports.parse = function (config, input) {
+    //+
+    /* NOTE: ADDED WHILE NOT FUTURE */
+    config.currMod = '<DEFAULT>'
+    //~
+
     // Make new config, deep copy.
     let localConfig = JSON.parse(JSON.stringify(config))
 
     if (!input.length)
         return localConfig
 
+    //+
+
+    /* NOTE: ADDED WHILE NOT FUTURE */
+
+    if (localConfig.srcSection === undefined)
+        localConfig.srcSection = exports.SrcSection.MODULE_DECLS
+
+    //-
+
+    /* NOTE: STAND BY WHILE NOT FUTURE */
+
     if (localConfig.srcSection === undefined)
         localConfig.srcSection = exports.SrcSection.TOP
+
+    //~
 
     for (let i = 0; i < input.length; i++) {
         if (commands[input[i]]) {

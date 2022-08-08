@@ -16,6 +16,7 @@ exports.ErrorTypes = Object.freeze({
     EXPR_NOT_CONST: -5,                 // Expression is not constant.
     SYNTAX_ERROR: -6,                   // Syntax error for sentence (not enough params, etc.)
     DUPLICATED_SYMBOL: -7,              // Duplicated symbol in module.
+    INVALID_OPCODE: -8                  // Invalid opcode mnemonic.
 })
 
 let Errors = Object.freeze([
@@ -26,6 +27,7 @@ let Errors = Object.freeze([
     { msg: 'Expression is not constant' },
     { msg: 'Syntax error' },
     { msg: 'Duplicated symbol' },
+    { msg: 'Invalid opcode mnemonic' }
 ])
 
 /**

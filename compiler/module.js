@@ -26,10 +26,15 @@ exports.searchConst = function (modName, input) {
             exports.dictionary[modName].data[input].entityType == parser.EntityType.CONST)
             return exports.dictionary[modName].data[input]
     }
-    return false
 }
 
 exports.addSymbol = function (modName, symName, entityType, value) {
+    //+
+    /* NOTE: ADDED WHILE NOT FUTURE */
+    if(!exports.dictionary[modName])
+        exports.add(null, modName)
+    //~
+    
     exports.dictionary[modName].data[symName] = {
         name: symName,
         entityType: entityType,
@@ -50,6 +55,9 @@ exports.dumpSymbol = function (name, val) {
         case parser.EntityType.CONST:
             process.stdout.write('CONST: value=' + val.value + '\n')
             break
+        case parser.EntityType.DATA:
+                process.stdout.write('DATA: value=' + val.value + '\n')
+                break
         case parser.EntityType.VARIABLE:
             process.stdout.write('VARIABLE: type=' + val.value.type +
                 ', array= ' + val.value.arrayLen + ', flags= ' + val.value.flags + '\n')

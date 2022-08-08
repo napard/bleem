@@ -16,6 +16,7 @@ const parser = require('./parser.js')
 
 const Configuration = {
     debugEnabled: true,
+    assembleAddr: 0
 }
 
 let repl = function () {
@@ -46,10 +47,13 @@ let repl = function () {
         }
     })
     .on('close', function (line) {
+        //-
         // Check presence of 'ENDMODULE'
-        if (lastConfig.srcSection != parser.SrcSection.MODULE_END)
+        /* NOTE: STAND BY WHILE NOT FUTURE */
+        /*if (lastConfig.srcSection != parser.SrcSection.MODULE_END)
             error.error(error.ErrorTypes.INVALID_SECTION,
-                ', expected `ENDMODULE\'', lastConfig.lineIndex, '')
+                ', expected `ENDMODULE\'', lastConfig.lineIndex, '')*/
+        //~
         // Dump debug info.
         if (lastConfig.debugEnabled) {
             console.log('MODULE: ' + lastConfig.currMod + ' ----------')

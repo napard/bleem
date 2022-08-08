@@ -1,0 +1,15 @@
+CONST MY_CONST 50+(3*$ff)(
+CONST MY_CONST2 MY_CONST-56(
+CONST HEX_TEST $fffC0
+
+DATA TEST 1, 2, MY_CONST, 4
+DATA8 TEST2 1, 7, "0123", 0
+DATA8 TEST3 "Esto es un texto", 0
+
+    NOP
+    MOV      [R1], R2
+    'MOV     $1234, R1
+
+
+
+
