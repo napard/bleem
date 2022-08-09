@@ -7,9 +7,29 @@ DATA8 TEST2 1, 7, "0123", 0
 DATA8 TEST3 "Esto es un texto", 0
 
     NOP
-    MOV      [R1], R2
-    'MOV     $1234, R1
 
+    'MOV         $1234, R1
+    'MOV         MY_CONST, R1
+    'MOV         R1, R2
+
+    'MOV         R2, [R1:$1234]
+    'MOV         [R1:$1234], R2
+    'MOV BYTE    R2, [R1:$1234]
+    'MOV BYTE    [R1:$1234], R2
+
+    ' Scaling
+    'MOV         R2, [R1:$1234, 8]
+    'MOV         [R1:$1234, 8], R2
+    'MOV BYTE    R2, [R1:$1234, 8]
+    'MOV BYTE    [R1:$1234, 8], R2
+    ' ~
+
+    ' Indirect
+    'MOV         R2, <R1:$1234, 8>
+    MOV         R2, <R7:$1234>
+    'MOV         <R1:$1234, 8>, R2
+    'MOV BYTE    R2, <R1:$1234, 8>
+    'MOV BYTE    <R1:$1234, 8>, R2
 
 
 

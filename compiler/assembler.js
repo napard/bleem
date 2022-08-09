@@ -8,6 +8,7 @@
 
 "use strict"
 
+const error = require('./error.js')
 const lexer = require('./lexer.js')
 const parser = require('./parser.js')
 const _module = require('./module.js')
@@ -128,6 +129,7 @@ exports.parse_OPCODE = function (config, input) {
             break
 
         default:
+            // This is only a guard, should not happen...
             error.error(error.ErrorTypes.INVALID_OPCODE, ', in: `' + input[0] + '\'')
             break
     }
@@ -136,15 +138,53 @@ exports.parse_OPCODE = function (config, input) {
 // NOP
 
 let parse_NOP = function (config, input) {
-    process.stdout.write(Opcodes.NOP + ' /* ' + config.assembleAddr + ' */\n')
+    process.stdout.write(Opcodes.NOP + ' /* ' + config.assembleAddr++ + ' */\n')
+    process.stdout.write(Opcodes.NOP + ' /* ' + config.assembleAddr++ + ' */\n')
+    process.stdout.write(Opcodes.NOP + ' /* ' + config.assembleAddr++ + ' */\n')
+    process.stdout.write(Opcodes.NOP + ' /* ' + config.assembleAddr++ + ' */\n')
 }
 
 // MOV
 
+let expectCloseBracket = function (token, brackType, config, input) {
+    if (brackType == 1 && token !== '^__RBRACK__^')
+        error.error(error.ErrorTypes.SYNTAX_ERROR, ', expected closing bracket `]\'',
+            config.lineIndex, input)
+    else if (brackType == 2 && token !== '^__RANGBRACK__^')
+        error.error(error.ErrorTypes.SYNTAX_ERROR, ', expected closing bracket `>\'',
+            config.lineIndex, input)
+}
+
+let parseOffsetAndScale = function (input, index, config) {
+    let offs = undefined
+    let scale = undefined
+    let i = index
+    if (input[i] != '^__COLON__^')
+        return [i, offs, scale]
+    i++
+    if ((offs = parser.parseConstExpression(config, { index: i++ }, input, false, false)) === undefined)
+        error.error(error.ErrorTypes.EXPR_NOT_CONST,
+            ', at: `' + input[i] + '\'', config.lineIndex, input)
+    if (input[i] == '^__COMMA__^' && input[i] != '^__RBRACK__^' && input[i] != '^__RANGBRACK__^') {
+        i++
+        if ((scale = parser.parseConstExpression(config, { index: i }, input, false, false)) === undefined)
+            error.error(error.ErrorTypes.EXPR_NOT_CONST,
+                ', at: `' + input[i] + '\'', config.lineIndex, input)
+        if (scale % 2) {
+            error.error(error.ErrorTypes.INVALID_SCALE,
+                ', at: `' + input[i] + '\'', config.lineIndex, input)
+        }
+        i++
+    }
+    return [i, offs, scale]
+}
+
 let parse_MOV = function (config, input) {
-    // Types: 1 = constexpr, 2 = register
+    // Types: 1 = constexpr, 2 = register, 3: memref
     let fst = { type: 0 }, snd = { type: 0 }, thd = { type: 0 }
-    let val = undefined, index = 1
+    let val = undefined, ref_reg = undefined, ref_offs = undefined, ref_scale = undefined
+    let brack = 0
+    let index = 1
     // Check parameter #1.
     parser.assertParamPresent(config, input[1])
     if ((val = parser.parseConstExpression(config, { index: index }, input, false, false)) === undefined) {
@@ -152,20 +192,86 @@ let parse_MOV = function (config, input) {
         if ((val = isRegister(input[index])) === undefined) {
             // Check for memory reference.
             if (input[index] != '^__LBRACK__^' && input[index] != '^__LANGBRACK__^') {
-
+                error.error(error.ErrorTypes.SYNTAX_ERROR, ', unrecognized token',
+                    config.lineIndex, input)
             } else {
                 // Memory reference.
-                let a = 0
+                if (input[index] == '^__LBRACK__^')
+                    brack = 1
+                else if (input[index] == '^__LANGBRACK__^')
+                    brack = 2
+
+                fst.type = 3
+                index++
+                if (ref_reg = isRegister(input[index])) {
+                    // Checked base register, go for offset and scale.
+                    index++
+                    [index, ref_offs, ref_scale] = parseOffsetAndScale(input, index, config)
+                    expectCloseBracket(input[index++], brack, config, input)
+                } else if (ref_offs = parser.parseConstExpression(config, { index: index }, input, false, false)) {
+                    // Check only offset.
+                    index++
+                    expectCloseBracket(input[index++], brack, config, input)
+                }
             }
         } else {
             // Register.
             fst.type = 2
             fst.val = val
+            index++
         }
     } else {
         // Const expr.
         fst.type = 1
         fst.val = val
+        index++
+    }
+    if (input[index] != '^__COMMA__^')
+        error.error(error.ErrorTypes.SYNTAX_ERROR, ', expected `,\'',
+            config.lineIndex, input)
+    index++
+
+    // Check parameter #2.
+    parser.assertParamPresent(config, input[1])
+    if ((val = parser.parseConstExpression(config, { index: index }, input, false, false)) === undefined) {
+        // No const expr, check for register.
+        if ((val = isRegister(input[index])) === undefined) {
+            // Check for memory reference.
+            if (input[index] != '^__LBRACK__^' && input[index] != '^__LANGBRACK__^') {
+                error.error(error.ErrorTypes.SYNTAX_ERROR, ', unrecognized token',
+                    config.lineIndex, input)
+            } else {
+                if (fst.type == 3)
+                    error.error(error.ErrorTypes.SYNTAX_ERROR, ', invalid second operand',
+                        config.lineIndex, input)
+
+                // Memory reference.
+                if (input[index] == '^__LBRACK__^')
+                    brack = 1
+                else if (input[index] == '^__LANGBRACK__^')
+                    brack = 2
+
+                snd.type = 3
+                index++
+                if (ref_reg = isRegister(input[index])) {
+                    // Checked base register, go for offset and scale.
+                    index++
+                    [index, ref_offs, ref_scale] = parseOffsetAndScale(input, index, config)
+                    expectCloseBracket(input[index++], brack, config, input)
+                } else if (ref_offs = parser.parseConstExpression(config, { index: index }, input, false, false)) {
+                    // Check only offset.
+                    index++
+                    expectCloseBracket(input[index++], brack, config, input)
+                }
+            }
+        } else {
+            // Register.
+            snd.type = 2
+            snd.val = val
+        }
+    } else {
+        error.error(error.ErrorTypes.SYNTAX_ERROR, ', invalid second operand',
+            config.lineIndex, input)
     }
 }
 
