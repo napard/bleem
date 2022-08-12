@@ -14,6 +14,7 @@ variable byteop  0 byteop !         \ Byte length instruction.
 : incIp  VMWORD-BYTES asmip +! ;
 
 : vmword,  ( u -- )
+  s" // " type  dup dup hex u. decimal s" : " type u. cr
   codebuff  asmip @ +  >r
   dup           $ff and r>   dup 1 + >r  c!
   dup 8  rshift $ff and r>   dup 1 + >r  c!
@@ -112,30 +113,35 @@ variable dtmp
 : hlt
   $ff encode-op  vmword, ;
 
+(
 : movi16r \ $ffff r1 movi16r
   encode-reg1 swap  encode-imm16 swap  $10 encode-op  2or vmword, ;
+)
 
 : movir \ $fffff r1 movi16r
-  encode-reg1 swap  encode-imm20 swap  $14 encode-op  2or vmword, ;
+  encode-reg1 swap  encode-imm20 swap  $11 encode-op  2or vmword, ;
 
 : movrr \ r1 r2 movrr
-  encode-reg2 swap  encode-reg1 swap  $11 encode-op  2or vmword, ;
+  encode-reg2 swap  encode-reg1 swap  $12 encode-op  2or vmword, ;
 
 : movrm \ r1 $ffff r2 movrm
-  encode-reg1 swap  encode-imm16 swap  >r >r encode-reg2 r> r>  $12 encode-op  3or vmword, ;
+  encode-reg1 swap  encode-imm16 swap  >r >r encode-reg2 r> r>  $13 encode-op  3or vmword, ;
 
-: movmr \ r1 $ffff r2 movrm
-  encode-reg2 swap  encode-imm16 swap  >r >r encode-reg1 r> r>  $13 encode-op  3or vmword, ;
+: movmr \ r1 $ffff r2 movmr
+  encode-reg2 swap  encode-imm16 swap  >r >r encode-reg1 r> r>  $14 encode-op  3or vmword, ;
 
 : movr*r \ r1 r2 movr*r
   encode-reg2 swap  encode-reg1 swap
-  byteop @  if byteop off  $18 else $15 then  encode-op
+  byteop @  if byteop off  $1c else $1b then  encode-op
   2or vmword, ;
 
-: movrr* \ r1 r2 movr*r
+: movrr* \ r1 r2 movrr*
   encode-reg2 swap  encode-reg1 swap
-  byteop @  if byteop off  $17 else $16 then  encode-op
+  byteop @  if byteop off  $1e else $1d then  encode-op
   2or vmword, ;
+
+\          ^
+\ FIXED ---|
 
 : addrr \ r1 r2 r3 addrr
   encode-reg3 swap  encode-reg2  >r >r encode-reg1 r> r>  $24 encode-op  3or vmword, ;
@@ -188,8 +194,8 @@ variable dtmp
   then ;
 
 : jnei16 \ $ffff jnei16
-  $40 emit-fwd-jmp
-  origin @ -  asmip @  -  encode-imm16  $40 encode-op  or vmword, ;
+  $30 emit-fwd-jmp
+  origin @ -  asmip @  -  encode-imm16  $30 encode-op  or vmword, ;
 
 : jei16
   $41 emit-fwd-jmp

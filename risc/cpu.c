@@ -13,7 +13,7 @@ static const char* THIS_FILE = "cpu.h";
 risc_vm_t* risc_create_cpu() {
     risc_vm_t* cpu = RISC_MALLOC(sizeof(risc_vm_t));
     cpu->ram = risc_create_memory(RISC_TOTAL_MEMORY_BYTES);
-    cpu->registers = (VMWORD*)risc_create_memory(reg_NUM_REGS * sizeof(VMWORD));
+    /*cpu->registers = (VMWORD*)risc_create_memory(reg_NUM_REGS * sizeof(VMWORD));*/
     cpu->registers[reg_IP] = RISC_ROM_CODE_BASE;
     cpu->registers[reg_SP] = cpu->registers[reg_FP] = RISC_STACK_BASE;
     cpu->stack_frame_size = 0;
@@ -28,7 +28,7 @@ risc_vm_t* risc_create_cpu() {
 }
 
 void risc_destroy_cpu(risc_vm_t* pCpu) {
-    risc_destroy_memory((uint8_t*)pCpu->registers);
+    /*risc_destroy_memory((uint8_t*)pCpu->registers);*/
     risc_destroy_memory(pCpu->ram);
     RISC_FREE(pCpu->memregions);
     RISC_FREE(pCpu);
@@ -66,7 +66,7 @@ void risc_run(risc_vm_t* pCpu) {
     static SHWORD soffs;
     static VMWORD word, fetch;
     static risc_opc_handler_t g_opcs0[RISC_MAX_OPCODES];
-    static uint8_t r1, r2, r3;
+    static uint8_t r1, r2, r3, regmi;
 #ifdef _DEBUG        
     static uint32_t instr_per_secs = 0;
     static double accum_time = 0.0;

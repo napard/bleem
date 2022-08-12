@@ -26,6 +26,7 @@
 #define RISC_EMULATED_CLOCK
 #define RISC_VIDEO_DEVICE_SDL2
 #define RISC_SDL2_RENDERER_FLAGS SDL_RENDERER_ACCELERATED
+//#define RISC_VIRTUAL_GAME_CONSOLE
 
 /* Includes depending on compilation flags. ----------------------------------*/
 
@@ -53,80 +54,61 @@
 #define RISC_GETCHAR                  {printf("Press a key...\n"); getchar();}
 
 enum risc_opcode_t {
-    opc_NOP =                 0x00,
-    opc_MOV_IMM16_REG =       0x10,
-    opc_MOV_REG_REG =         0x11,
-    opc_MOV_REG_MEM16 =       0x12,
-    opc_MOV_MEM16_REG =       0x13,
-    opc_MOV_IMM20_REG =       0x14,
-    opc_MOV_REG_PTR_REG =     0x15,
-    opc_MOV_REG_REG_PTR =     0x16,
+    opc_NOP =               0x00,
 
-    opc_MOV_BREG_REG_PTR =    0x17,
-    opc_MOV_REG_PTR_BREG =    0x18,
+    opc_MOV_I_R =           0x11,
+    opc_MOV_R_R =           0x12,
+    opc_MOV_R_M =           0x13,
+    opc_MOV_M_R =           0x14,
+    opc_MOVB_R_M =          0x15,
+    opc_MOVB_M_R =          0x16,
+    opc_MOVI_R_M =          0x17,
+    opc_MOVI_M_R =          0x18,
+    opc_MOVIB_R_M =         0x19,
+    opc_MOVIB_M_R =         0x1a,
+    opc_MOV_MR_R =          0x1b,
+    opc_MOVB_MR_R =         0x1c,
+    opc_MOV_R_MR =          0x1d,
+    opc_MOVB_R_MR =         0x1e,
 
-#if 0
-    opc_MOV_REG_MEM20 =       0x16,
-    opc_MOV_MEM20_REG =       0x17,
-#endif
+    opc_ADD =               0x20,
+    opc_ADC =               0x21,
+    opc_SUB =               0x22,
+    opc_SUBC =              0x23,
+    opc_INC =               0x24,
+    opc_DEC =               0x25,
+    opc_MUL =               0x26,
+    opc_DIV =               0X27,
+    opc_LSHI =              0x28,
+    opc_LSHR =              0x29,
+    opc_RSHI =              0x2a,
+    opc_RSHR =              0x2b,
+    opc_AND =               0x2c,
+    opc_OR =                0x2d,
+    opc_XOR =               0x2e,
+    opc_NOT =               0x2f,
 
-    opc_ADD_REG_REG =         0x24,
-#if 0
-    opc_ADD_LIT_REG =         0x25,
-    opc_SUB_LIT_REG =         0x26,
-    opc_SUB_REG_LIT =         0x27,
-#endif
-    opc_SUB_REG_REG =         0x28,
-    opc_INC_REG =             0x29,
-    opc_DEC_REG =             0x2a,
-#if 0
-    opc_MUL_LIT_REG =         0x2b,
-#endif
-    opc_MUL_REG_REG =         0x2c,
-    
-    opc_LSF_REG_LIT =         0x30,
-    opc_LSF_REG_REG =         0x31,
-    opc_RSF_REG_LIT =         0x32,
-    opc_RSF_REG_REG =         0x33,
-#if 0
-    opc_AND_REG_LIT =         0x34,
-#endif
-    opc_AND_REG_REG =         0x35,
-#if 0
-    opc_OR_REG_LIT =          0x36,
-#endif
-    opc_OR_REG_REG =          0x37,
-#if 0
-    opc_XOR_REG_LIT =         0x38,
-#endif
-    opc_XOR_REG_REG =         0x39,
-    opc_NOT =                 0x3a,
+    opc_JNE =               0x30, /* |  0000|   00|OPC| */
+                                  /* |    16|    8|  0| */
+                                  /* |offset|RegMI|OPC| => RegMI = Register = 0x1n / Memory = 0x00 / Indirect = 0x20 */
+    opc_JE =                0x31,
+    opc_JLT =               0x32,
+    opc_JLE =               0x33,
+    opc_JGT =               0x34,
+    opc_JGE =               0x35,
+    opc_JC =                0x36,
+    opc_JNC =               0x37,
 
-    opc_JMP_NOT_EQ =          0x40,
-    opc_JMP_EQ =              0x41,
-    opc_JMP_LT =              0x42,
-    opc_JMP_LE =              0x43,
-    opc_JMP_GT =              0x44,
-    opc_JMP_GE =              0x45,
-    opc_JMP_CY =              0x46,
-    opc_JMP_NOT_CY =          0x47,
-#if 0
-    
-    opc_PSH_LIT =             0x57,
-    opc_PSH_REG =             0x58,
-    
-    opc_POP =                 0x59,
-    opc_CAL_LIT =             0x6a,
-    opc_CAL_REG =             0x6b,
-    
-    opc_RET =                 0x6c,
-#endif
-    
-    opc_ADDC_REG_REG =        0xc4,
-    opc_SUBC_REG_REG =        0xc8,
-    
-    opc_HALT =                0xff,
-    
+    opc_PUSH =              0x40,
+    opc_POP =               0x41,
+    opc_PUSHF =             0x42,
+    opc_POPF =              0x43,
+    opc_CALL =              0x44,
+    opc_RET =               0x45,
+    opc_IRET =              0x46,
+
+    opc_HLT =               0xff,
+
     RISC_MAX_OPCODES
 };
 
@@ -221,7 +203,7 @@ typedef struct _risc_display_t {
 } risc_display_t;
 
 typedef struct _risc_vm_t {
-    VMWORD* registers;
+    VMWORD registers[reg_NUM_REGS];
     risc_opc_handler_t* opctable;
     VMWORD stack_frame_size;
     VMWORD flags;

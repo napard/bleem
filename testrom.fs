@@ -17,7 +17,7 @@ $000ff7f1 constant VIDEO_BGCOL_REG
         2 %r1 movir
         %r1 %r2 movrr*
 
-        ' start jnei16
+        start jnei16
 
         hlt
 

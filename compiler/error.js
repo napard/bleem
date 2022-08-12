@@ -17,7 +17,7 @@ exports.ErrorTypes = Object.freeze({
     SYNTAX_ERROR: -6,                   // Syntax error for sentence (not enough params, etc.)
     DUPLICATED_SYMBOL: -7,              // Duplicated symbol in module.
     INVALID_OPCODE: -8,                 // Invalid opcode mnemonic.
-    INVALID_SCALE: -9                   // Invaled scale vale for MOV instruction.
+    INVALID_SCALE: -9                   // Invalid scale vale for MOV instruction.
 })
 
 let Errors = Object.freeze([

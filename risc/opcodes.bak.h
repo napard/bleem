@@ -102,140 +102,111 @@ __INVALID_OPCODE:
 __OPC_NOP:
     NEXT_I
 
-__OPC_MOV_I_R:  // MOV $12345, R1
+__OPC_MOV_IMM16_REG: // mov imm16, reg
 {
     r1 = (fetch >> 8) & 0xf;
-    SET_REGISTER(r1, (fetch >> 12) & 0xfffff);
-    RISC_TRACE("MOV imm20, R1");
+    SET_REGISTER(r1, (fetch >> 16) & 0xffff);
+    RISC_TRACE("mov imm16, r1");
     NEXT_I
 }
 
-__OPC_MOV_R_R: // MOV R1, R2
+__OPC_MOV_IMM20_REG: // mov imm20, reg
+{
+    r1 = (fetch >> 8) & 0xf;
+    SET_REGISTER(r1, (fetch >> 12) & 0xfffff);
+    RISC_TRACE("mov imm20, r1");
+    NEXT_I
+}
+
+__OPC_MOV_REG_REG: // mov reg, reg
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
     SET_REGISTER(r2, CPU->registers[r1]);
-    RISC_TRACE("MOV R1, R2");
+    RISC_TRACE("mov r1, r2");
     NEXT_I
 }
 
-__OPC_MOV_R_M:
+__OPC_MOV_REG_MEM16: // mov r2, [r1:imm16]
 {
     r1 = (fetch >> 8) & 0xf; // base
     r2 = (fetch >> 12) & 0xf; // data
     word = (fetch >> 16) & 0xffff; // offset
     risc_set_word(CPU, CPU->registers[r2], CPU->registers[r1] + word);
-    RISC_TRACE("MOV R2, [R1:imm16]");
+    RISC_TRACE("mov r2, [r1:imm16]");
     NEXT_I
 }
 
-__OPC_MOV_M_R:
+__OPC_MOV_MEM16_REG: // mov [r1:imm16], r2
 {
     r1 = (fetch >> 8) & 0xf; // base
     r2 = (fetch >> 12) & 0xf; // data
     word = (fetch >> 16) & 0xffff; // offset
     SET_REGISTER(r2, risc_get_word(CPU, CPU->registers[r1] + word));
-    RISC_TRACE("MOV [R1:imm16], R2");
+    RISC_TRACE("mov [r1:imm16], r2");
     NEXT_I
 }
 
-__OPC_MOVB_R_M:
+#if 0
+__OPC_MOV_LIT_MEM:
 {
-    r1 = (fetch >> 8) & 0xf; // base
-    r2 = (fetch >> 12) & 0xf; // data
-    word = (fetch >> 16) & 0xffff; // offset
-    risc_set_byte(CPU, CPU->registers[r2], CPU->registers[r1] + word);
-    RISC_TRACE("MOV BYTE R2, [R1:imm16]");
+    VMWORD val, addr;
+    FETCH32(CPU, val);
+    FETCH32(CPU, addr);
+    risc_set_word(CPU, val, addr);
     NEXT_I
 }
+#endif
 
-__OPC_MOVB_M_R:
-{
-    r1 = (fetch >> 8) & 0xf; // base
-    r2 = (fetch >> 12) & 0xf; // data
-    word = (fetch >> 16) & 0xffff; // offset
-    SET_REGISTER(r2, risc_get_byte(CPU, CPU->registers[r1] + word) & 0xff);
-    RISC_TRACE("MOV BYTE [R1:imm16], R2");
-    NEXT_I
-}
-
-__OPC_MOVI_R_M:
-{
-    r1 = (fetch >> 8) & 0xf; // base
-    r2 = (fetch >> 12) & 0xf; // data
-    word = (fetch >> 16) & 0xffff; // offset
-    risc_set_word(CPU, CPU->registers[r2], risc_get_word(CPU, CPU->registers[r1] + word));
-    RISC_TRACE("MOV R2, <R1:imm16>");
-    NEXT_I
-}
-
-__OPC_MOVI_M_R:
-{
-    r1 = (fetch >> 8) & 0xf; // base
-    r2 = (fetch >> 12) & 0xf; // data
-    word = (fetch >> 16) & 0xffff; // offset
-    SET_REGISTER(r2, risc_get_word(CPU, risc_get_word(CPU, CPU->registers[r1] + word)));
-    RISC_TRACE("MOV <R1:imm16>, R2");
-    NEXT_I
-}
-
-__OPC_MOVIB_R_M:
-{
-    r1 = (fetch >> 8) & 0xf; // base
-    r2 = (fetch >> 12) & 0xf; // data
-    word = (fetch >> 16) & 0xffff; // offset
-    risc_set_byte(CPU, CPU->registers[r2], risc_get_word(CPU, CPU->registers[r1] + word));
-    RISC_TRACE("MOV BYTE R2, <R1:imm16>");
-    NEXT_I
-}
-
-__OPC_MOVIB_M_R:
-{
-    r1 = (fetch >> 8) & 0xf; // base
-    r2 = (fetch >> 12) & 0xf; // data
-    word = (fetch >> 16) & 0xffff; // offset
-    SET_REGISTER(r2, risc_get_word(CPU, risc_get_word(CPU, CPU->registers[r1] + word)) & 0xff);
-    RISC_TRACE("MOV BYTE <R1:imm16>, R2");
-    NEXT_I
-}
-
-__OPC_MOV_MR_R:
+__OPC_MOV_REG_PTR_REG: // mov [r1], r2
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
     SET_REGISTER(r2, risc_get_word(CPU, CPU->registers[r1]));
-    RISC_TRACE("MOV [R1], R2");
+    RISC_TRACE("mov [r1], r2");
     NEXT_I
 }
 
-__OPC_MOVB_MR_R:
+__OPC_MOV_REG_PTR_BREG: // mov [r1], r2:8
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
-    SET_REGISTER(r2, risc_get_word(CPU, CPU->registers[r1]) & 0xff);
-    RISC_TRACE("MOV BYTE [R1], R2");
+    SET_REGISTER(r2, risc_get_byte(CPU, CPU->registers[r1]));
+    RISC_TRACE("mov [r1], r2:8");
     NEXT_I
 }
 
-__OPC_MOV_R_MR:
+__OPC_MOV_REG_REG_PTR: // mov r1, [r2]
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
     risc_set_word(CPU, CPU->registers[r1], CPU->registers[r2]);
-    RISC_TRACE("MOV R1, [R2]");
+    RISC_TRACE("mov r1, [r2]");
     NEXT_I
 }
 
-__OPC_MOVB_R_MR:
+__OPC_MOV_BREG_REG_PTR: // mov r1:8, [r2]
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
     risc_set_byte(CPU, CPU->registers[r1], CPU->registers[r2]);
-    RISC_TRACE("MOV BYTE R1, [R2]");
+    RISC_TRACE("mov r1:8, [r2]");
     NEXT_I
 }
 
-__OPC_ADD:
+#if 0
+__OPC_MOV_LIT_OFF_REG: // mov [addr + r1], r2
+{
+    VMWORD addr;
+    FETCH32(CPU, addr);
+    r1 = FETCH(CPU);
+    r2 = FETCH(CPU);
+    CPU->registers[r2] = risc_get_word(CPU, CPU->registers[r1] + addr);
+    NEXT_I
+}
+#endif
+
+__OPC_ADD_REG_REG:
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
@@ -250,11 +221,11 @@ __OPC_ADD:
         SETF_V;
     else
         RESETF_V;
-    RISC_TRACE("ADD R1, R2, R3");
+    RISC_TRACE("add r1, r2, r3");
     NEXT_I
 }
 
-__OPC_ADC:
+__OPC_ADDC_REG_REG:
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
@@ -270,11 +241,31 @@ __OPC_ADC:
         SETF_V;
     else
         RESETF_V;
-    RISC_TRACE("ADC R1, R2, R3");
+    RISC_TRACE("addc r1, r2, r3");
     NEXT_I
 }
 
-__OPC_SUB:
+#if 0
+__OPC_SUB_LIT_REG:
+{
+    VMWORD val;
+    FETCH32(CPU, val);
+    r1 = FETCH(CPU);
+    CPU->registers[reg_ACC] = CPU->registers[r1] - val;
+    NEXT_I
+}
+
+__OPC_SUB_REG_LIT:
+{
+    VMWORD val;
+    r1 = FETCH(CPU);
+    FETCH32(CPU, val);
+    CPU->registers[reg_ACC] = val - CPU->registers[r1];
+    NEXT_I
+}
+#endif
+
+__OPC_SUB_REG_REG:
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
@@ -289,11 +280,11 @@ __OPC_SUB:
         SETF_V;
     else
         RESETF_V;
-    RISC_TRACE("SUB R2, R1, R3");
+    RISC_TRACE("sub r2, r1, r3");
     NEXT_I
 }
 
-__OPC_SUBC:
+__OPC_SUBC_REG_REG:
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
@@ -309,113 +300,147 @@ __OPC_SUBC:
         SETF_V;
     else
         RESETF_V;
-    RISC_TRACE("SUBC R2, R1, R3");
+    RISC_TRACE("subc r2, r1, r3");
     NEXT_I
 }
 
-__OPC_INC:
+__OPC_INC_REG:
 {
     r1 = (fetch >> 8) & 0xf;
     SET_REGISTER(r1, CPU->registers[r1] + 1);
-    RISC_TRACE("INC R1");
+    RISC_TRACE("inc r1");
     NEXT_I
 }
 
-__OPC_DEC:
+__OPC_DEC_REG:
 {
     r1 = (fetch >> 8) & 0xf;
     SET_REGISTER(r1, CPU->registers[r1] - 1);
-    RISC_TRACE("DEC R1");
+    RISC_TRACE("dec r1");
     NEXT_I
 }
 
-__OPC_MUL:
+#if 0
+__OPC_MUL_LIT_REG:
+{
+    VMWORD val;
+    FETCH32(CPU, val);
+    r1 = FETCH(CPU);
+    CPU->registers[reg_ACC] = CPU->registers[r1] * val;
+    NEXT_I
+}
+#endif
+
+__OPC_MUL_REG_REG:
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
     r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] * CPU->registers[r2]);
-    RISC_TRACE("MUL R1, R2, R3");
+    RISC_TRACE("mul r1, r2, r3");
     NEXT_I
 }
 
-__OPC_DIV:
-{
-    r1 = (fetch >> 8) & 0xf;
-    r2 = (fetch >> 12) & 0xf;
-    r3 = (fetch >> 16) & 0xf;
-    SET_REGISTER(r3, CPU->registers[r1] / CPU->registers[r2]);
-    RISC_TRACE("DIV R1, R2, R3");
-    NEXT_I
-}
-
-__OPC_LSHI:
+__OPC_LSF_REG_LIT:
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
     word = (fetch >> 16) & 0xffff;
     SET_REGISTER(r2, CPU->registers[r1] << word);
-    RISC_TRACE("LSHI imm16, R1, R2");
+    RISC_TRACE("lsf imm16, r1, r2");
     NEXT_I
 }
 
-__OPC_LSHR:
+__OPC_LSF_REG_REG:
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
     r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] << CPU->registers[r2]);
-    RISC_TRACE("LSHR R2, R1, R3");
+    RISC_TRACE("lsf r2, r1, r3");
     NEXT_I
 }
 
-__OPC_RSHI:
+__OPC_RSF_REG_LIT:
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
     word = (fetch >> 16) & 0xffff;
     SET_REGISTER(r2, CPU->registers[r1] >> word);
-    RISC_TRACE("RSHI imm16, R1, R2");
+    RISC_TRACE("rsf imm16, r1, r2");
     NEXT_I
 }
 
-__OPC_RSHR:
+__OPC_RSF_REG_REG:
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
     r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] >> CPU->registers[r2]);
-    RISC_TRACE("RSHR R2, R1, R3");
+    RISC_TRACE("rsf r2, r1, r3");
     NEXT_I
 }
 
-__OPC_AND:
+#if 0
+__OPC_AND_REG_LIT:
+{
+    VMWORD lit;
+    r1 = FETCH(CPU);
+    FETCH32(CPU, lit);
+    CPU->registers[reg_ACC] = CPU->registers[r1] & lit;
+    NEXT_I 
+}
+#endif
+
+__OPC_AND_REG_REG:
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
     r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] & CPU->registers[r2]);
-    RISC_TRACE("AND R1, R2, R3");
+    RISC_TRACE("and r1, r2, r3");
     NEXT_I
 }
 
-__OPC_OR:
+#if 0
+__OPC_OR_REG_LIT:
+{
+    VMWORD lit;
+    r1 = FETCH(CPU);
+    FETCH32(CPU, lit);
+    CPU->registers[reg_ACC] = CPU->registers[r1] | lit;
+    NEXT_I 
+}
+#endif
+
+__OPC_OR_REG_REG:
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
     r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] | CPU->registers[r2]);
-    RISC_TRACE("OR R1, R2, R3");
+    RISC_TRACE("or r1, r2, r3");
     NEXT_I
 }
 
-__OPC_XOR:
+#if 0
+__OPC_XOR_REG_LIT:
+{
+    VMWORD lit;
+    r1 = FETCH(CPU);
+    FETCH32(CPU, lit);
+    CPU->registers[reg_ACC] = CPU->registers[r1] ^ lit;
+    NEXT_I 
+}
+#endif
+
+__OPC_XOR_REG_REG:
 {
     r1 = (fetch >> 8) & 0xf;
     r2 = (fetch >> 12) & 0xf;
     r3 = (fetch >> 16) & 0xf;
     SET_REGISTER(r3, CPU->registers[r1] ^ CPU->registers[r2]);
-    RISC_TRACE("XOR R1, R2, R3");
+    RISC_TRACE("xor r1, r2, r3");
     NEXT_I
 }
 
@@ -423,172 +448,219 @@ __OPC_NOT:
 {
     r1 = (fetch >> 16) & 0xf;
     SET_REGISTER(r1, ~CPU->registers[r1]);
-    RISC_TRACE("NOT R1");
+    RISC_TRACE("not r1");
     NEXT_I
 }
 
-#define JUMP(cond, trace_msg)                                     \
-    regmi = (fetch >> 8) & 0xff;                                  \
-    if (regmi & 0x10) /* Memory */                                \
-    {                                                             \
-        soffs = ((fetch >> 16) & 0xffff);                         \
-        if (cond)                                                 \
-        {                                                         \
-            SET_REGISTER(reg_IP, CPU->registers[regmi & 0xf]);    \
-        }                                                         \
-    }                                                             \
-    else if (regmi & 0x20) /* Indirect */                         \
-    {                                                             \
-        soffs = ((fetch >> 16) & 0xffff);                         \
-        if (cond)                                                 \
-        {                                                         \
-            SET_REGISTER(reg_IP, risc_get_word(CPU, soffs));      \
-        }                                                         \
-    }                                                             \
-    else /* Register */                                           \
-    {                                                             \
-        soffs = ((fetch >> 16) & 0xffff);                         \
-        if (cond)                                                 \
-        {                                                         \
-            SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs); \
-        }                                                         \
-    }                                                             \
-    RISC_TRACE(trace_msg);
-
-__OPC_JNE:
+__OPC_HALT:
 {
-    JUMP(!(GET_FLAG(CPU, FLAG_Z)), "JNE")
-    NEXT_I
-}
-
-__OPC_JE:
-{
-    JUMP(GET_FLAG(CPU, FLAG_Z), "JE")
-    NEXT_I
-}
-
-__OPC_JLT:
-{
-    JUMP(GET_FLAG(CPU, FLAG_N) ^ GET_FLAG(CPU, FLAG_V), "JLT")
-    NEXT_I
-}
-
-__OPC_JLE:
-{
-    JUMP((GET_FLAG(CPU, FLAG_N) ^ GET_FLAG(CPU, FLAG_V)) | GET_FLAG(CPU, FLAG_Z), "JLE")
-    NEXT_I
-}
-
-__OPC_JGT:
-{
-    JUMP(!((GET_FLAG(CPU, FLAG_N) ^ GET_FLAG(CPU, FLAG_V)) | GET_FLAG(CPU, FLAG_Z)), "JGT")
-    NEXT_I
-}
-
-__OPC_JGE:
-{
-    JUMP(!(GET_FLAG(CPU, FLAG_N) ^ GET_FLAG(CPU, FLAG_V)), "JGE")
-    NEXT_I
-}
-
-__OPC_JC:
-{
-    JUMP(GET_FLAG(CPU, FLAG_C), "JC")
-    NEXT_I
-}
-
-__OPC_JNC:
-{
-    JUMP(!(GET_FLAG(CPU, FLAG_C)), "JNC")
-    NEXT_I
-}
-
-__OPC_PUSH:
-__OPC_POP:
-
-__OPC_PUSHF:
-{
-    PUSH(CPU->flags)
-    NEXT_I
-}
-
-__OPC_POPF:
-{
-    POP(CPU->flags)
-    NEXT_I
-}
-
-__OPC_CALL:
-__OPC_RET:
-__OPC_IRET:
-
-__OPC_HLT:
     printf("SYSTEM HALTED\n");
     RISC_GETCHAR;
     exit(0);
     CPU->registers[reg_IP] -= sizeof(VMWORD);
     sleep(5);
     NEXT_I
+}
+
+__OPC_JMP_NOT_EQ:
+{
+    soffs = ((fetch >> 16) & 0xffff);
+    if(!GET_FLAG(CPU, FLAG_Z)) {
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
+    }
+    RISC_TRACE("jne");
+    NEXT_I
+}
+
+__OPC_JMP_EQ:
+{
+    soffs = ((fetch >> 16) & 0xffff);
+    if(GET_FLAG(CPU, FLAG_Z)) {
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
+    }
+    RISC_TRACE("je");
+    NEXT_I
+}
+
+__OPC_JMP_LT:
+{
+    soffs = ((fetch >> 16) & 0xffff);
+    if(GET_FLAG(CPU, FLAG_N) ^ GET_FLAG(CPU, FLAG_V)) {
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
+    }
+    RISC_TRACE("jlt");
+    NEXT_I
+}
+
+__OPC_JMP_LE:
+{
+    soffs = ((fetch >> 16) & 0xffff);
+    if((GET_FLAG(CPU, FLAG_N) ^ GET_FLAG(CPU, FLAG_V)) | GET_FLAG(CPU, FLAG_Z)) {
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
+    }
+    RISC_TRACE("jle");
+    NEXT_I
+}
+
+__OPC_JMP_GT:
+{
+    soffs = ((fetch >> 16) & 0xffff);
+    if(!((GET_FLAG(CPU, FLAG_N) ^ GET_FLAG(CPU, FLAG_V)) | GET_FLAG(CPU, FLAG_Z))) {
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
+    }
+    RISC_TRACE("jgt");
+    NEXT_I
+}
+
+__OPC_JMP_GE:
+{
+    soffs = ((fetch >> 16) & 0xffff);
+    if(!(GET_FLAG(CPU, FLAG_N) ^ GET_FLAG(CPU, FLAG_V))) {
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
+    }
+    RISC_TRACE("jge");
+    NEXT_I
+}
+
+__OPC_JMP_CY:
+{
+    soffs = ((fetch >> 16) & 0xffff);
+    if(GET_FLAG(CPU, FLAG_C)) {
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
+    }
+    RISC_TRACE("jc");
+    NEXT_I
+}
+
+__OPC_JMP_NOT_CY:
+{
+    soffs = ((fetch >> 16) & 0xffff);
+    if(!GET_FLAG(CPU, FLAG_C)) {
+        SET_REGISTER(reg_IP, CPU->registers[reg_IP] + soffs);
+    }
+    RISC_TRACE("jnc");
+    NEXT_I
+}
+
+#if 0
+__OPC_PSH_LIT:
+{
+    VMWORD val;
+    FETCH32(CPU, val);
+    PUSH(val);
+    NEXT_I
+}
+
+__OPC_PSH_REG:
+{
+    r1 = FETCH(CPU);
+    PUSH(CPU->registers[r1]);
+    NEXT_I
+}
+
+__OPC_POP:
+{
+    r1 = FETCH(CPU);
+    POP(CPU->registers[r1]);
+    NEXT_I
+}
+
+__OPC_CAL_LIT:
+{
+    VMWORD addr;
+    FETCH32(CPU, addr);
+    SAVE_STATE();
+    /* Set dest IP. */
+    CPU->registers[reg_IP] = addr;
+    NEXT_I
+}
+
+__OPC_CAL_REG:
+{
+    r1 = FETCH(CPU);
+    SAVE_STATE();
+    /* Set dest IP. */
+    CPU->registers[reg_IP] = r1;
+    NEXT_I
+}
+
+__OPC_RET:
+{
+    RESTORE_STATE();
+    NEXT_I
+}
+#endif
 #endif /* OPCODE_IMPL */
 
 #ifdef OPCODE_VECTOR
 #define o(opc) \
     g_opcs0[opc_##opc] = &&__OPC_##opc;
 {
+#if 0
     o(NOP)
-
-    o(MOV_I_R)
-    o(MOV_R_R)
-    o(MOV_R_M)
-    o(MOV_M_R)
-    o(MOVB_R_M)
-    o(MOVB_M_R)
-    o(MOVI_R_M)
-    o(MOVI_M_R)
-    o(MOVIB_R_M)
-    o(MOVIB_M_R)
-    o(MOV_MR_R)
-    o(MOVB_MR_R)
-    o(MOV_R_MR)
-    o(MOVB_R_MR)
-
-    o(ADD)
-    o(ADC)
-    o(SUB)
-    o(SUBC)
-    o(INC)
-    o(DEC)
-    o(MUL)
-    o(DIV)
-    o(LSHI)
-    o(LSHR)
-    o(RSHI)
-    o(RSHR)
-    o(AND)
-    o(OR)
-    o(XOR)
-    o(NOT)
-
-    o(JNE)  /* |  0000|   00|OPC| */
-            /* |    16|    8|  0| */
-            /* |offset|RegMI|OPC| => RegMI = Register = 0x1n / Memory = 0x00 / Indirect = 0x20 */
-    o(JE)
-    o(JLT)
-    o(JLE)
-    o(JGT)
-    o(JGE)
-    o(JC)
-    o(JNC)
-
-    o(PUSH)
+    o(MOV_IMM16_REG)
+    o(MOV_IMM20_REG)
+    o(MOV_REG_REG)
+    o(MOV_REG_MEM16)
+    o(MOV_MEM16_REG)
+#if 0
+    o(MOV_LIT_MEM)
+#endif
+    o(MOV_REG_PTR_REG)
+    o(MOV_REG_REG_PTR)
+    o(MOV_REG_PTR_BREG)
+    o(MOV_BREG_REG_PTR)
+#if 0
+    o(MOV_LIT_OFF_REG)
+#endif
+    o(ADD_REG_REG)
+    o(ADDC_REG_REG)
+    o(HALT)
+#if 0
+    o(PSH_LIT)
+    o(PSH_REG)
     o(POP)
-    o(PUSHF)
-    o(POPF)
-    o(CALL)
+    o(CAL_LIT)
+    o(CAL_REG)
     o(RET)
-    o(IRET)
-
-    o(HLT)
+    o(ADD_LIT_REG)
+    o(SUB_LIT_REG)
+    o(SUB_REG_LIT)
+#endif
+    o(SUB_REG_REG)
+    o(SUBC_REG_REG)
+    o(INC_REG)
+    o(DEC_REG)
+#if 0
+    o(MUL_LIT_REG)
+#endif
+    o(MUL_REG_REG)
+    o(LSF_REG_LIT)
+    o(LSF_REG_REG)
+    o(RSF_REG_LIT)
+    o(RSF_REG_REG)
+#if 0
+    o(AND_REG_LIT)
+#endif
+    o(AND_REG_REG)
+#if 0
+    o(OR_REG_LIT)
+#endif
+    o(OR_REG_REG)
+#if 0
+    o(XOR_REG_LIT)
+#endif
+    o(XOR_REG_REG)
+    o(NOT)
+    o(JMP_NOT_EQ)
+    o(JMP_EQ)
+    o(JMP_LT)
+    o(JMP_LE)
+    o(JMP_GT)
+    o(JMP_GE)
+    o(JMP_CY)
+    o(JMP_NOT_CY)
+#endif
 }
 #endif /* OPCODE_VECTOR */
 

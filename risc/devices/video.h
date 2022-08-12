@@ -11,15 +11,21 @@
 
 #include "risc.h"
 
+#ifndef RISC_VIRTUAL_GAME_CONSOLE
 #define RISC_VIDEO_SCALER         3
-#define RISC_VIDEO_DEVICE_ROWS    25
-#define RISC_VIDEO_DEVICE_COLUMNS 40
+#define RISC_VIDEO_DEVICE_ROWS    25 /* In units of characters. */
+#define RISC_VIDEO_DEVICE_COLUMNS 40 /* In units of characters. */
 #define RISC_VIDEO_TILE_PIXELS    8
 
 #define RISC_CONSOLE_DATA_BASE      (RISC_TOTAL_MEMORY_BYTES - \
                                     RISC_VIDEO_DEVICE_ROWS * RISC_VIDEO_DEVICE_COLUMNS * 2)
 #define RISC_CONSOLE_DATA_LIMIT     (RISC_CONSOLE_DATA_BASE + \
                                     RISC_VIDEO_DEVICE_ROWS * RISC_VIDEO_DEVICE_COLUMNS * 2 - 1)
+#else
+/* TODO */
+#define RISC_VIDEO_DEVICE_ROWS    240 /* In pixels. */
+#define RISC_VIDEO_DEVICE_COLUMNS 136 /* In pixels. */
+#endif /* !RISC_VIRTUAL_GAME_CONSOLE */ 
 
 #define RISC_VIDEO_CONTROL_BASE     0x000ff7f0
 #define RISC_VIDEO_CMD_REG          0x00000000

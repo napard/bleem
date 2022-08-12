@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     
     initialize_devices();
     
-    /*RISC_GETCHAR;*/
+    /*RISC_GETCHAR*/
     debug(g_cpu, g_cpu->registers[reg_IP]);
     risc_run(g_cpu);
 }

@@ -87,6 +87,7 @@ point2_t point2_normalize(point2_t pP) {
             x * RISC_VIDEO_TILE_PIXELS] = pix; \
     }
 
+#if 0
 static void draw_line() {
     point2_t pt0 = {
         g_cpu->registers[reg_R5],
@@ -119,6 +120,7 @@ static void draw_line() {
         } /* e_xy+e_y < 0 */
     }
 }
+#endif
 
 /* ---------------------------------------------------------------------- */
 
